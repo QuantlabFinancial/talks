@@ -50,7 +50,60 @@
 
 ---
 
-#### Ben Deane & Kris Jusiak
+#### Ben Deane & Kris Jusiak - Quantlab Financial
+
+----
+
+### Agenda
+
+* Motivation & explanation 
+  * what is JITting 
+  * why use it? 
+  * benefits, pros & cons 
+
+* Existing solutions 
+  * other language comparisons 
+  * cling 
+  * jitting vs compile-time eval (e.g. from D) 
+
+----
+
+### Agenda
+
+* How it works 
+  * P1609: the proposal 
+  * integration/interaction with the compiler 
+
+* Use cases 
+  * flexible code at runtime 
+  * evaluating strings 
+  * extending libraries at runtime 
+  * FFI uses 
+
+----
+
+### Agenda
+
+* C++20 feature combinations 
+  * default-constructible lambdas 
+  * lambdas in unevaluated contexts 
+  * familiar template syntax lambdas 
+  * concepts 
+
+* C++2b feature possibilities 
+  * combination with reflection 
+
+----
+
+### Agenda
+
+* Compilation mechanisms 
+  * propagating optimizations 
+  * producing binaries 
+
+==============================================================================
+
+## Examples
 
 ----
 
@@ -61,6 +114,7 @@
   [[clang::jit]] auto jit() -> void {
     std::cout << typeid(T).name() << '\n';
   }
+
   int main(int argc, char**) {
     jit<argv[0]>();
   }
@@ -84,12 +138,14 @@
     std::copy(std::begin(v), std::end(v), std::make_ostream_joiner(sorted, ","));
     return sorted.str();
   };
+
   template<auto... Ns> // convert back to types space
   [[clang::jit]] auto verify() -> void {
     static_assert(std::array{1, 2, 3, 4, 7, 9} == std::array{Ns...}, "Not sorted!");
   }
+
   int main() {
-   verify<sort<1, 9, 3>(4, 2, 7)>(); // mix compile-time and run-time values
+    verify<sort<1, 9, 3>(4, 2, 7)>(); // mix compile-time and run-time values
   }
 ```
 
@@ -102,6 +158,7 @@ template<class T>
 [[clang::jit]] auto execute() -> void {
   T{}(); // invokes lambda expression
 }
+
 int main() {
   execute<"decltype([]{ std::cout << __PRETTY_FUNCTION__ << '\n'; }">();
 }
@@ -121,6 +178,7 @@ constexpr auto compiles = [](auto code) {
   }
   return true;
 }
+
 int main() {
   static_assert(    compiles("decltype([]{       })"));
   static_assert(not compiles("decltype([]{ error })"));
@@ -137,6 +195,7 @@ template<class T>
   T{}(argc, argv);
   return 0;
 }
+
 int main() {
   clang.jit.save_binary(
     "jit.out",
@@ -184,9 +243,9 @@ std::cout << typeid(argv[0]).name() << '\n';
 ## Dispatching
 
 ```cpp
-  unordered_map<int, string> mapping{}
-  mapping[42] = "std::cout << 42";
-  Generate a switch over keys and execute lambda expressions from valuesc
+unordered_map<int, string> mapping{}
+mapping[42] = "std::cout << 42";
+Generate a switch over keys and execute lambda expressions from valuesc
 ```
 
 ----
@@ -199,9 +258,21 @@ std::cout << typeid(argv[0]).name() << '\n';
 
 ```cpp
 template<class T> [[clang::jit]] call() {}
-- call<"decltype([]{})">(); // Okay
-- call<decltype([]{}>();    // Also Okay, which is great for generated code as the attribute will be ignored and call still can be done
+call<"decltype([]{})">(); // Okay
+call<decltype([]{}>();    // Also Okay, which is great for generated code as the attribute will be ignored and call still can be done
 ```
+
+==============================================================================
+
+### Summary
+
+==============================================================================
+
+## Let's JIT all the things!
+
+### Questions?
+
+#### Quantlab Financial
           </script>
         </section>
 
