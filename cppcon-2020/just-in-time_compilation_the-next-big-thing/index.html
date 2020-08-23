@@ -28,8 +28,8 @@
       }
     </script>
 
-    <meta name="description" content="Dependency Injection - a 25-dollar term for a 5-cent concept">
-    <meta name="author" content="Kris Jusiak">
+    <meta name="description" content="Just-in-Time Compilation: The Next Big Thing?">
+    <meta name="author" content="Kris Jusiak & Ben Deane">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   </head>
@@ -42,7 +42,7 @@
                    data-separator-vertical="^----+$">
           <script type="text/template">
 
-#### CppCon-2020
+#### CppCon / Nth September 2020
 
 ---
 
@@ -52,7 +52,242 @@
 
 #### Ben Deane & Kris Jusiak - Quantlab Financial
 
+Note:
+Introductions:
+
+[Ben] This is Kris...
+
+[Kris] This is Ben...
+
 ----
+
+### Agenda
+
+* Motivation & explanation
+* Existing solutions
+* How it works: source and compilation
+* Simple use cases
+* Possibilities: C++20 and beyond
+
+Notes:
+
+==============================================================================
+
+## Motivations
+
+----
+
+### What is JITting?
+
+Instead of Ahead-of-Time (AOT), aka "the norm":
+
+Just-in-Time (JIT) is compilation at the point of need.
+
+It's like the application (/library) is the compiler...
+
+Notes:
+If you've seen JF's talk this is probably familiar
+
+----
+
+### Why JIT-compile?
+
+One or more of these reasons:
+
+* AOT is not possible
+* AOT is not desirable
+* JIT gives perf benefits
+* JIT gives productivity benefits
+* JIT allows different workflows/use cases
+
+Notes:
+
+----
+
+### Sometimes AOT is not possible/desirable
+
+* If I don't *have* the AOT source, obviously I can't compile it.
+* If I don't *have* the parameters that will constrain the code at runtime, I can't tailor the code to them.
+* AOT might lock me into an ABI.
+
+Notes:
+
+If the source is provided by a client; by a colleague who is using my
+library/application; by a tool that is autogenerating code, perhaps.
+
+If I know arguments used to parameterize code, normally I could use a
+template. But maybe these arguments are only available at runtime.
+
+----
+
+### Sometimes JIT gives performance benefits
+
+* If I don't know where the source is going to be run, I can't AOT-compile with the best architecture flags.
+* I might not be running the code on just one architecture.
+* In order to get the best possible optimization, I need the best possible information about *all* the code.
+
+Notes:
+
+If I'm compiling for just one target, maybe I can achieve the best perf. But
+many of us are not doing that. And many of us are shipping to multiple
+architectures and maybe maintaining multiple binary distributions.
+
+If we can reduce the amount of binary maintenance, that's probably good.
+
+----
+
+### Sometimes JIT is more productive
+
+* I can trade AOT-compilation time (developer time) against JIT-compilation time (user time).
+* With JIT, I can compile just what is needed rather than accounting for all possible use cases.
+
+Notes:
+
+Compilation time is something we want to minimise. JIT allows a new tradeoff.
+We're trying to minimise total time: compile-time + run-time. And that is going
+to depend on several things.
+
+With JIT we can minimise that total time *over time* by choosing when we compile
+things as well as how we compile them.
+
+And by compiling just what we need we can avoid unnecessary work.
+
+----
+
+### JIT allows different use cases
+
+* "OK, so I can compile code at point of need. So what?"
+* It's just the tip of the iceberg, as we shall see...
+
+Notes:
+
+Much of the second half of the talk covers various use cases that we've thought of.
+
+There are bound to be many more. JIT is a sea-change in development, something
+like adopting version control.
+
+==============================================================================
+
+## Existing solutions
+
+Notes:
+A comparison with a few similar-feeling options.
+
+---
+
+
+==============================================================================
+
+## How it works
+
+----
+
+### P1609: the proposal
+
+
+==============================================================================
+
+## Simple use cases
+
+Notes:
+
+Let's show some simple use cases to get the hang of what JITting looks like.
+
+----
+
+### Hello World, JIT-style
+
+```cpp
+  template <class T>
+  [[clang::jit]] auto jit() -> void {
+    std::cout << typeid(T).name() << '\n';
+  }
+
+  int main(int argc, char**) {
+    jit<argv[0]>();
+  }
+```
+
+``` bash
+  $ ./a.out int     # prints i
+  $ ./a.out double  # prints d
+```
+
+Notes:
+Note the attribute on the `jit` function. This tells the JIT compiler that this
+function should be JITted.
+
+And we pass in a string as a template parameter. The contents of that string
+become the type `T` that the function is instantiated with.
+
+----
+
+## Mix compile-time & run-time (1)
+
+```cpp
+  template <auto... Ns>
+  constexpr auto sort = [](auto... ns) {
+    // combine & sort CT & RT values
+    using T = std::common_type_t<decltype(Ns)..., decltype(ns)...>;
+    std::vector<T> v{Ns..., ns...};
+    std::sort(std::begin(v), std::end(v));
+    
+    // return comma-separated string (=> NTTP parameter pack)
+    std::stringstream sorted{};
+    std::copy(std::begin(v), std::end(v), 
+              std::make_ostream_joiner(sorted, ","));
+    return sorted.str();
+  };
+```
+
+Notes: 
+Here is a sort function that takes some of its parameters as NTTPs, and the rest
+as runtime values.
+
+We're using a `vector` here but we could also use an `array` of `T`s with
+`sizeof...` on both parameter packs.
+
+Or the runtime argument could be an `array` or `vector` of values perhaps.
+
+The return value is a `string` that we'll use as a parameter for a JIT function.
+
+----
+
+## Mix compile-time & run-time (2)
+
+```cpp
+  template <auto... Ns>
+  [[clang::jit]] auto verify() -> void {
+    static_assert(std::array{1, 2, 3, 4, 7, 9}
+        == std::array{Ns...}, "Not sorted!");
+  }
+
+  int main() {
+    verify<sort<1, 9, 3>(4, 2, 7)>();
+  }
+```
+
+Notes:
+
+Here is the JIT function template. We pass in the result of `sort` i.e. the
+comma-separated string of sorted values.
+
+Note that `sort` doesn't have to be `constexpr`!
+
+----
+
+
+
+==============================================================================
+
+## C++20 and beyond
+
+Notes:
+
+Let's think about some more powerful use cases when we mix in features from
+C++20 and beyond.
+
+==============================================================================
 
 ### Agenda
 
@@ -104,50 +339,6 @@
 ==============================================================================
 
 ## Examples
-
-----
-
-## Hello World
-
-```cpp
-  template<class T>
-  [[clang::jit]] auto jit() -> void {
-    std::cout << typeid(T).name() << '\n';
-  }
-
-  int main(int argc, char**) {
-    jit<argv[0]>();
-  }
-```
-
-```
-  ./a.out int    // prints i
-  ./a.out float  // prints f
-```
-
-----
-
-## Compile/Run/Compile-time
-
-```cpp
-  template<auto... Ns> // sort using STL
-  constexpr auto sort = [](auto... ns) {
-    std::vector<std::common_type_t<decltype(Ns)..., decltype(ns)...>> v{Ns..., ns...};
-    std::sort(std::begin(v), std::end(v));
-    std::stringstream sorted{};
-    std::copy(std::begin(v), std::end(v), std::make_ostream_joiner(sorted, ","));
-    return sorted.str();
-  };
-
-  template<auto... Ns> // convert back to types space
-  [[clang::jit]] auto verify() -> void {
-    static_assert(std::array{1, 2, 3, 4, 7, 9} == std::array{Ns...}, "Not sorted!");
-  }
-
-  int main() {
-    verify<sort<1, 9, 3>(4, 2, 7)>(); // mix compile-time and run-time values
-  }
-```
 
 ----
 
