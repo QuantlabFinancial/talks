@@ -418,12 +418,20 @@ template<auto Expr>
 
 ----
 
-#### Type -> String -> Type
+### Type -> String -> Type
 
 ```cpp
 template<auto N>
-[[clang::jit]] auto jit() {
-  return;
+[[clang::jit]] auto make_const(auto n) -> std::string {
+```
+<!-- .element: class="fragment" data-fragment-index="1" -->
+
+```cpp
+  return "std::integral_constant<" + std::to_string(N + n) << '\n';
+```
+<!-- .element: class="fragment" data-fragment-index="2" -->
+
+```cpp
 }
 ```
 <!-- .element: class="fragment" data-fragment-index="1" -->
@@ -431,12 +439,18 @@ template<auto N>
 ---
 
 ```cpp
-jit<42>
+const auto value = make_const<40>(2); // "std::integral_constant<42>"
 ```
+<!-- .element: class="fragment" data-fragment-index="3" -->
+
+```cpp
+jit<value>(); // jit<std::integral_constant<42>>
+```
+<!-- .element: class="fragment" data-fragment-index="4" -->
 
 ----
 
-### How it works? - details
+### How it works? - Details
 
 <a href="https://www.youtube.com/watch?v=6dv9vdGIaWs"><img src="images/jit.png" style="width: 75%; background:none; border:none; box-shadow:none;" /></a>
 
@@ -550,51 +564,63 @@ Note that `sort` doesn't have to be `constexpr`!
 
 ----
 
-### Read-Compile-Run-Loop (REPL)
-
-----
-
-#### JIT - make binary
-
-Intermediate representation (IR)
+### Make binary
 
 ```cpp
-template<class T>
+template<auto Expr>
+```
+<!-- .element: class="fragment" data-fragment-index="1" -->
+
+```cpp
 [[clang::jit("CXXFLAGS=-O3, out=binary.ir")] run(bool execute) {
+```
+<!-- .element: class="fragment" data-fragment-index="2" -->
+
+```cpp
   if (execute) {
-    return T{}();
-  } // otherwise only instansiate
+    return Expr();
+  } // otherwise only instantiate
+```
+<!-- .element: class="fragment" data-fragment-index="3" -->
+
+```cpp
 }
 ```
+<!-- .element: class="fragment" data-fragment-index="1" -->
 
-```sh
-run<"[]{return 42;}">(true); // produces binary.ir
-run<"[]{return 42;}">(false); // produces binary.ir without running the function
+---
+
+```cpp
+run<"[]{return 42;}">(true); // produces binary.ir*
 ```
+<!-- .element: class="fragment" data-fragment-index="4" -->
+
+```cpp
+run<"[]{return 42;}">(false); // produces binary.ir without
+                              // running the function
+```
+<!-- .element: class="fragment" data-fragment-index="5" -->
+
+#### * Intermediate representation (IR)
+<!-- .element: class="fragment" data-fragment-index="4" -->
 
 ----
 
-#### `Cpp` Injection - https://www.w3schools.com/sql/sql_injection.asp
+### CPP Injection
 
 ```sql
 SELECT * FROM Users WHERE Name ="John Doe" AND Pass ="myPass"
-```
-<!-- .element: class="fragment" -->
-
-```sql
 SELECT * FROM Users WHERE Name ="" or ""="" AND Pass ="" or ""=""
 ```
 <!-- .element: class="fragment" -->
 
-> The SQL above is valid and will return all rows from the "Users" table, since OR ""="" is always TRUE.
+##### https://www.w3schools.com/sql/sql_injection.asp
 <!-- .element: class="fragment" -->
 
-```cpp
-```
-<!-- .element: class="fragment" -->
+Notes:
 
-```cpp
-```
+The SQL above is valid and will return all rows from the "Users" table, since OR ""="" is always TRUE.
+
 <!-- .element: class="fragment" -->
 
 ==============================================================================
@@ -608,10 +634,6 @@ SELECT * FROM Users WHERE Name ="" or ""="" AND Pass ="" or ""=""
 ---
 
 ### Questions?
-
----
-
-#### Ben Deane & Kris Jusiak - Quantlab Financial
           </script>
         </section>
 
