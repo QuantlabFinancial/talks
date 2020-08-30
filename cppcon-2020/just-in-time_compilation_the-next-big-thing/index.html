@@ -63,26 +63,32 @@ Introductions:
 
 ### Agenda
 
-* #### Motivation & explanation
-<!-- .element: class="fragment" -->
+* #### Motivation
+<!-- .element: class="fragment" data-fragment-index="0" -->
 
 * #### Existing solutions
-<!-- .element: class="fragment" -->
+<!-- .element: class="fragment" data-fragment-index="1" -->
 
-* #### How it works: source and compilation
-<!-- .element: class="fragment" -->
+* #### How it works*
+<!-- .element: class="fragment" data-fragment-index="2" -->
 
-* #### Simple use cases
-<!-- .element: class="fragment" -->
+  * #### Simple use cases
+<!-- .element: class="fragment" data-fragment-index="3" -->
 
-* #### Possibilities: C++20 and beyond
-<!-- .element: class="fragment" -->
+* #### Examples: C++20 and beyond
+<!-- .element: class="fragment" data-fragment-index="4" -->
 
-Notes:
+* #### Summary
+<!-- .element: class="fragment" data-fragment-index="5" -->
+
+---
+
+##### * Based on [P1609](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2020/p1609r3.html)
+<!-- .element: class="fragment" data-fragment-index="2" -->
 
 ==============================================================================
 
-## Motivations
+## Motivation
 
 ----
 
@@ -177,26 +183,48 @@ like adopting version control.
 
 ==============================================================================
 
+## Existing solutions
+
+----
+
 ### Existing solutions
 
-* #### Facebook’s C++ JIT
+* #### [Cling](https://github.com/root-project/cling)
+<!-- .element: class="fragment" data-fragment-index="0" -->
+
+* #### [Runtime Compiled C++](https://github.com/RuntimeCompiledCPlusPlus) / [Easy-Jit](https://github.com/jmmartinez/easy-just-in-time)
+<!-- .element: class="fragment" data-fragment-index="2" -->
+
+* #### <ins>[[clang::jit]] - [P1609](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2020/p1609r3.html)</ins>*
+<!-- .element: class="fragment" data-fragment-index="4" -->
+
+* #### [D mixin](https://dlang.org/articles/mixin.html)**
+<!-- .element: class="fragment" data-fragment-index="5" -->
+
+* #### [Others](https://github.com/RuntimeCompiledCPlusPlus/RuntimeCompiledCPlusPlus/wiki/Alternatives)
+<!-- .element: class="fragment" data-fragment-index="6" -->
+
+---
+
+##### * With custom modifications
+<!-- .element: class="fragment" data-fragment-index="4" -->
+
+##### ** Compile-time
+<!-- .element: class="fragment" data-fragment-index="5" -->
+
+----
+
+### Cling vs [[clang::jit]]
+
+* `Cling` is primarily a REPL and always JIT compiles the whole program with minimal optimization
 <!-- .element: class="fragment" -->
 
-* #### runtime-cpp
-<!-- .element: class="fragment" -->
-
-* #### Cling
-<!-- .element: class="fragment" -->
-
-* #### [[clang::jit]] <- [P1609](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2020/p1609r3.html)
-<!-- .element: class="fragment" -->
-
-* #### [...](https://github.com/RuntimeCompiledCPlusPlus/RuntimeCompiledCPlusPlus/wiki/Alternatives)
+* `[[clang::jit]]` is a C++ language extension to allow JIT compilation of specifically-annotated functions with user-supplied run-time constants for maximal optimizations not even possible at build time
 <!-- .element: class="fragment" -->
 
 ----
 
-### Exising solutions - Dlang - https://dlang.org/articles/mixin.html
+### D mixin - Compile-time JIT
 
 ```d
 template GenStruct(string Name, string M1) {
@@ -206,20 +234,27 @@ template GenStruct(string Name, string M1) {
 <!-- .element: class="fragment" data-fragment-index="1" -->
 
 ```d
-mixin(GenStruct!("Foo", "bar"));
+mixin(GenStruct!("Foo", "bar")); // [[clang::jit]] at Compile-time
 ```
 <!-- .element: class="fragment" data-fragment-index="2" -->
+
+---
 
 ```d
 struct Foo { int bar; }
 ```
 <!-- .element: class="fragment" data-fragment-index="3" -->
 
-----
+#### https://dlang.org/articles/mixin.html
+<!-- .element: class="fragment" data-fragment-index="4" -->
 
 ==============================================================================
 
-#### Hello World - [P1609](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2020/p1609r3.html)
+### How it works
+
+----
+
+### Hello World - [P1609](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2020/p1609r3.html)
 
 ```cpp
 template <class T>
@@ -227,9 +262,9 @@ template <class T>
 <!-- .element: class="fragment" data-fragment-index="1" -->
 
 ```cpp
-[[clang::jit]]
+[[clang::jit]] // Instantiation at run-time Point-Of-Instantiation
 ```
-<!-- .element: class="fragment" data-fragment-index="2" -->
+<!-- .element: class="fragment" data-fragment-index="4" -->
 
 ```cpp
 auto jit() {
@@ -238,6 +273,15 @@ auto jit() {
 ```
 <!-- .element: class="fragment" data-fragment-index="1" -->
 
+---
+
+<pre><code>jit< int >()</code> -> <font color="lime">i</font></pre>
+<!-- .element: class="fragment" data-fragment-index="3" -->
+
+----
+
+### Hello World - [P1609](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2020/p1609r3.html)
+
 ```cpp
 int main(int argc, const char** argv) {
   jit<argv[1]>();
@@ -245,38 +289,160 @@ int main(int argc, const char** argv) {
 ```
 <!-- .element: class="fragment" data-fragment-index="1" -->
 
-<pre><code>jit<int>()</code> -> <font color="lime">d</font></pre>
-<!-- .element: class="fragment" data-fragment-index="3" -->
+---
 
 ```cpp
 $CXX -fjit hello_world.cpp -o hello_world.out
 ```
+<!-- .element: class="fragment" data-fragment-index="2" -->
 
 ```sh
-ls -lh hello_world.out
+ls -lh hello_world.out # 3M
 # compiler is included in the binary and pre-compiled module of the host
 ```
-
-<pre><code>./hello_world.out "int"</code> -> <font color="lime">i</font></pre>
-<!-- .element: class="fragment" data-fragment-index="3" -->
-
-<pre><code>./hello_world.out "double"</code> -> <font color="lime">d</font></pre>
-<!-- .element: class="fragment" data-fragment-index="3" -->
-
-<pre><code>./hello_world.out "error"</code> -> <font color="lime">d</font></pre>
-<!-- .element: class="fragment" data-fragment-index="3" -->
-
-<pre><code>./hello_world.out "decltype([]{})"</code> -> <font color="lime">$0</font></pre>
-<!-- .element: class="fragment" data-fragment-index="3" -->
-
----
-
-<pre><code>./hello_world.out "decltype([]{})"</code> -> <font color="lime">d</font></pre>
 <!-- .element: class="fragment" data-fragment-index="3" -->
 
 ----
 
-### `[[clang::jit]]` - Pros
+### Hello World - [P1609](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2020/p1609r3.html)
+
+<pre><code>./hello_world.out "int"</code> -> <font color="lime">i</font></pre>
+<!-- .element: class="fragment" data-fragment-index="1" -->
+
+<pre><code>./hello_world.out "double"</code> -> <font color="lime">d</font></pre>
+<!-- .element: class="fragment" data-fragment-index="2" -->
+
+<pre><code>./hello_world.out "error"</code> -> <font color="red">terminate called after throwing an instance of 'clang_compile_error'</font></pre>
+<!-- .element: class="fragment" data-fragment-index="3" -->
+
+<pre><code>./hello_world.out "decltype([]{})"</code> -> <font color="lime">$0</font></pre>
+<!-- .element: class="fragment" data-fragment-index="4" -->
+
+----
+
+### Hello World - [P1609](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2020/p1609r3.html)
+
+```cpp
+template<class T>
+[[clang::jit]] auto jit() {
+  T{}(); // invokes lambda expression
+}
+```
+<!-- .element: class="fragment" data-fragment-index="1" -->
+
+<pre><code>./hello_world.out "decltype([]{ std::puts("Hello world from JIT!); })"</code> -> <font color="lime">Hello world from JIT!</font></pre>
+<!-- .element: class="fragment" data-fragment-index="2" -->
+
+---
+
+```cpp
+template<auto Expr>
+[[clang::jit]] auto jit() {
+  Expr();
+}
+```
+<!-- .element: class="fragment" data-fragment-index="3" -->
+
+<pre><code>./hello_world.out "[]{ std::puts("Hello world from JIT!); }"</code> -> <font color="lime">Hello world from JIT!</font></pre>
+<!-- .element: class="fragment" data-fragment-index="4" -->
+
+----
+
+### Handling errors
+
+```cpp
+template<auto Expr>
+[[clang::jit]] auto jit() {
+```
+<!-- .element: class="fragment" data-fragment-index="1" -->
+
+```cpp
+  try {
+```
+<!-- .element: class="fragment" data-fragment-index="2" -->
+
+```cpp
+    Expr(); // throws
+```
+<!-- .element: class="fragment" data-fragment-index="3" -->
+
+```cpp
+  } catch(const clang_compile_error& err) {
+    std::cerr << err.what() << '\n';
+  }
+```
+<!-- .element: class="fragment" data-fragment-index="2" -->
+
+```cpp
+}
+```
+<!-- .element: class="fragment" data-fragment-index="1" -->
+
+---
+
+<pre><code>jit<"foo">()</code> -> <font color="red">error: 'foo' was not declared in this scope</font></pre>
+<!-- .element: class="fragment" data-fragment-index="4" -->
+
+----
+
+### Utilities
+
+```cpp
+template<auto Expr>
+[[clang::jit]] auto compiles() -> expected<clang_compile_error> {
+```
+<!-- .element: class="fragment" data-fragment-index="1" -->
+
+```cpp
+  try {
+    jit<Expr>();
+  } catch(const clang_compile_error& err) {
+    return err;
+  }
+  return true;
+```
+<!-- .element: class="fragment" data-fragment-index="2" -->
+
+```cpp
+}
+```
+<!-- .element: class="fragment" data-fragment-index="1" -->
+
+---
+
+<pre><font color="lime">assert(compiles<"[]{}">())</font></pre>
+<!-- .element: class="fragment" data-fragment-index="3" -->
+
+<pre><font color="red">assert(compiles<"[}">())</font></pre>
+<!-- .element: class="fragment" data-fragment-index="4" -->
+
+----
+
+#### Type -> String -> Type
+
+```cpp
+template<auto N>
+[[clang::jit]] auto jit() {
+  return;
+}
+```
+<!-- .element: class="fragment" data-fragment-index="1" -->
+
+---
+
+```cpp
+jit<42>
+```
+
+----
+
+### How it works? - details
+
+<a href="https://www.youtube.com/watch?v=6dv9vdGIaWs"><img src="images/jit.png" style="width: 75%; background:none; border:none; box-shadow:none;" /></a>
+
+----
+
+### Pros
 
 * #### Support for types
 <!-- .element: class="fragment" -->
@@ -296,12 +462,12 @@ ls -lh hello_world.out
   * #### Optimizations based on data
 <!-- .element: class="fragment" -->
 
-  * #### Supported platform
+  * ####  Optimizations based hardware
 <!-- .element: class="fragment" -->
 
 ----
 
-### `[[clang::jit]]` - Cons
+### Cons
 
 * #### Based on strings - might be overused
 <!-- .element: class="fragment" -->
@@ -311,43 +477,26 @@ ls -lh hello_world.out
 
 ----
 
-compiles
-auto
-return a string -> use a type
-
-#### `Cpp` Injection - https://www.w3schools.com/sql/sql_injection.asp
-
-```sql
-SELECT * FROM Users WHERE Name ="John Doe" AND Pass ="myPass"
-```
-
-```sql
-SELECT * FROM Users WHERE Name ="" or ""="" AND Pass ="" or ""=""
-```
-> The SQL above is valid and will return all rows from the "Users" table, since OR ""="" is always TRUE.
+### Future?
 
 ```cpp
+[[clang::jit]]           // run-time
 ```
+<!-- .element: class="fragment" -->
 
 ```cpp
+consteval [[clang::jit]] // compile-time
 ```
+<!-- .element: class="fragment" -->
 
-
-
-
-Read-Compile-Run-Loop (REPL)
-save binary using IR from a function
-
-Notes:
-Note the attribute on the `jit` function. This tells the JIT compiler that this
-function should be JITted.
-
-And we pass in a string as a template parameter. The contents of that string
-become the type `T` that the function is instantiated with.
+```cpp
+constexpr [[clang::jit]] // compile/run-time
+```
+<!-- .element: class="fragment" -->
 
 ==============================================================================
 
-## Mix compile-time & run-time (1)
+### Mix compile-time & run-time (1)
 
 ```cpp
   template <auto... Ns>
@@ -378,7 +527,7 @@ The return value is a `string` that we'll use as a parameter for a JIT function.
 
 ----
 
-## Mix compile-time & run-time (2)
+### Mix compile-time & run-time (2)
 
 ```cpp
   template <auto... Ns>
@@ -401,133 +550,52 @@ Note that `sort` doesn't have to be `constexpr`!
 
 ----
 
-
-
-==============================================================================
-
-## C++20 and beyond
-
-Notes:
-
-Let's think about some more powerful use cases when we mix in features from
-C++20 and beyond.
-
-==============================================================================
-
-## Examples
+### Read-Compile-Run-Loop (REPL)
 
 ----
 
-## Dynamic lambda expression
+#### JIT - make binary
+
+Intermediate representation (IR)
 
 ```cpp
 template<class T>
-[[clang::jit]] auto execute() -> void {
-  T{}(); // invokes lambda expression
-}
-
-int main() {
-  execute<"decltype([]{ std::cout << __PRETTY_FUNCTION__ << '\n'; }">();
+[[clang::jit("CXXFLAGS=-O3, out=binary.ir")] run(bool execute) {
+  if (execute) {
+    return T{}();
+  } // otherwise only instansiate
 }
 ```
 
+```sh
+run<"[]{return 42;}">(true); // produces binary.ir
+run<"[]{return 42;}">(false); // produces binary.ir without running the function
+```
+
 ----
 
-## Jit compile-time error
+#### `Cpp` Injection - https://www.w3schools.com/sql/sql_injection.asp
+
+```sql
+SELECT * FROM Users WHERE Name ="John Doe" AND Pass ="myPass"
+```
+<!-- .element: class="fragment" -->
+
+```sql
+SELECT * FROM Users WHERE Name ="" or ""="" AND Pass ="" or ""=""
+```
+<!-- .element: class="fragment" -->
+
+> The SQL above is valid and will return all rows from the "Users" table, since OR ""="" is always TRUE.
+<!-- .element: class="fragment" -->
 
 ```cpp
-template<class T> [[clang::jit]] auto jit() -> void { }
-constexpr auto compiles = [](auto code) {
-  try {
-    jit<code>();
-  } catch(const clang_jit_error& e) {
-    return false;
-  }
-  return true;
-}
-
-int main() {
-  static_assert(    compiles("decltype([]{       })"));
-  static_assert(not compiles("decltype([]{ error })"));
-}
 ```
-
-----
-
-## Templated main / binary
+<!-- .element: class="fragment" -->
 
 ```cpp
-template<class T>
-[[clang::jit]] auto jit_main(int argc, char** argv) -> int {
-  T{}(argc, argv);
-  return 0;
-}
-
-int main() {
-  clang.jit.save_binary(
-    "jit.out",
-    &jit_main<"decltype([](int argc, char** argv){ std::cout << argc << '\n'; })">
-  );
-}
 ```
-
-```
-./jit.out 1   # prints 1
-./jit.out 1 2 # prints 2
-```
-
-----
-
-## Jit + reflection
-
-----
-
-## Constexpr + Jit = D lang mixins -> https://dlang.org/articles/mixin.html
-
-----
-
-## C++ script
-
-```cpp
-#!/bin/c++-jit
-std::cout << typeid(argv[0]).name() << '\n';
-```
-
-----
-
-## DI
-
-```cpp
-[](type t) {} // to be injected
-```
-
-----
-
-## C++ JIT injection
-
-----
-
-## Dispatching
-
-```cpp
-unordered_map<int, string> mapping{}
-mapping[42] = "std::cout << 42";
-Generate a switch over keys and execute lambda expressions from valuesc
-```
-
-----
-
-## Embed + JIT self injection/modification
-
-----
-
-## JIT works with types and or strings
-
-```cpp
-template<class T> [[clang::jit]] call() {}
-call<"decltype([]{})">(); // Okay
-call<decltype([]{}>();    // Also Okay, which is great for generated code as the attribute will be ignored and call still can be done
-```
+<!-- .element: class="fragment" -->
 
 ==============================================================================
 
@@ -535,7 +603,7 @@ call<decltype([]{}>();    // Also Okay, which is great for generated code as the
 
 ==============================================================================
 
-### Let's `JIT` all the things!
+### Let's `JIT` all the things?!
 
 ---
 
