@@ -29,7 +29,7 @@
     </script>
 
     <meta name="description" content="Just-in-Time Compilation: The Next Big Thing?">
-    <meta name="author" content="Kris Jusiak & Ben Deane">
+    <meta name="author" content="Ben Deane & Kris Jusiak">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   </head>
@@ -42,7 +42,7 @@
                    data-separator-vertical="^----+$">
           <script type="text/template">
 
-#### CppCon / Nth September 2020
+#### CppCon / 16th September 2020
 
 ---
 
@@ -59,15 +59,24 @@ Introductions:
 
 [Kris] This is Ben...
 
-----
+==============================================================================
 
 ### Agenda
 
-* Motivation & explanation
-* Existing solutions
-* How it works: source and compilation
-* Simple use cases
-* Possibilities: C++20 and beyond
+* #### Motivation & explanation
+<!-- .element: class="fragment" -->
+
+* #### Existing solutions
+<!-- .element: class="fragment" -->
+
+* #### How it works: source and compilation
+<!-- .element: class="fragment" -->
+
+* #### Simple use cases
+<!-- .element: class="fragment" -->
+
+* #### Possibilities: C++20 and beyond
+<!-- .element: class="fragment" -->
 
 Notes:
 
@@ -168,50 +177,166 @@ like adopting version control.
 
 ==============================================================================
 
-## Existing solutions
+### Existing solutions
 
-Notes:
-A comparison with a few similar-feeling options.
+* #### Facebook’s C++ JIT
+<!-- .element: class="fragment" -->
+
+* #### runtime-cpp
+<!-- .element: class="fragment" -->
+
+* #### Cling
+<!-- .element: class="fragment" -->
+
+* #### [[clang::jit]] <- [P1609](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2020/p1609r3.html)
+<!-- .element: class="fragment" -->
+
+* #### [...](https://github.com/RuntimeCompiledCPlusPlus/RuntimeCompiledCPlusPlus/wiki/Alternatives)
+<!-- .element: class="fragment" -->
+
+----
+
+### Exising solutions - Dlang - https://dlang.org/articles/mixin.html
+
+```d
+template GenStruct(string Name, string M1) {
+  const char[] GenStruct = "struct " ~ Name ~ "{ int " ~ M1 ~ "; }";
+}
+```
+<!-- .element: class="fragment" data-fragment-index="1" -->
+
+```d
+mixin(GenStruct!("Foo", "bar"));
+```
+<!-- .element: class="fragment" data-fragment-index="2" -->
+
+```d
+struct Foo { int bar; }
+```
+<!-- .element: class="fragment" data-fragment-index="3" -->
+
+----
+
+==============================================================================
+
+#### Hello World - [P1609](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2020/p1609r3.html)
+
+```cpp
+template <class T>
+```
+<!-- .element: class="fragment" data-fragment-index="1" -->
+
+```cpp
+[[clang::jit]]
+```
+<!-- .element: class="fragment" data-fragment-index="2" -->
+
+```cpp
+auto jit() {
+  std::cout << typeid(T).name() << '\n';
+}
+```
+<!-- .element: class="fragment" data-fragment-index="1" -->
+
+```cpp
+int main(int argc, const char** argv) {
+  jit<argv[1]>();
+}
+```
+<!-- .element: class="fragment" data-fragment-index="1" -->
+
+<pre><code>jit<int>()</code> -> <font color="lime">d</font></pre>
+<!-- .element: class="fragment" data-fragment-index="3" -->
+
+```cpp
+$CXX -fjit hello_world.cpp -o hello_world.out
+```
+
+```sh
+ls -lh hello_world.out
+# compiler is included in the binary and pre-compiled module of the host
+```
+
+<pre><code>./hello_world.out "int"</code> -> <font color="lime">i</font></pre>
+<!-- .element: class="fragment" data-fragment-index="3" -->
+
+<pre><code>./hello_world.out "double"</code> -> <font color="lime">d</font></pre>
+<!-- .element: class="fragment" data-fragment-index="3" -->
+
+<pre><code>./hello_world.out "error"</code> -> <font color="lime">d</font></pre>
+<!-- .element: class="fragment" data-fragment-index="3" -->
+
+<pre><code>./hello_world.out "decltype([]{})"</code> -> <font color="lime">$0</font></pre>
+<!-- .element: class="fragment" data-fragment-index="3" -->
 
 ---
 
-
-==============================================================================
-
-## How it works
+<pre><code>./hello_world.out "decltype([]{})"</code> -> <font color="lime">d</font></pre>
+<!-- .element: class="fragment" data-fragment-index="3" -->
 
 ----
 
-### P1609: the proposal
+### `[[clang::jit]]` - Pros
 
+* #### Support for types
+<!-- .element: class="fragment" -->
 
-==============================================================================
+* #### Direct access to the host
+<!-- .element: class="fragment" -->
 
-## Simple use cases
+* #### compile-time performance
+<!-- .element: class="fragment" -->
 
-Notes:
+  * #### Memoization
+<!-- .element: class="fragment" -->
 
-Let's show some simple use cases to get the hang of what JITting looks like.
+* #### Run-time performance
+<!-- .element: class="fragment" -->
+
+  * #### Optimizations based on data
+<!-- .element: class="fragment" -->
+
+  * #### Supported platform
+<!-- .element: class="fragment" -->
 
 ----
 
-### Hello World, JIT-style
+### `[[clang::jit]]` - Cons
+
+* #### Based on strings - might be overused
+<!-- .element: class="fragment" -->
+
+* #### Doesn't support compile-time injection / only run-time
+<!-- .element: class="fragment" -->
+
+----
+
+compiles
+auto
+return a string -> use a type
+
+#### `Cpp` Injection - https://www.w3schools.com/sql/sql_injection.asp
+
+```sql
+SELECT * FROM Users WHERE Name ="John Doe" AND Pass ="myPass"
+```
+
+```sql
+SELECT * FROM Users WHERE Name ="" or ""="" AND Pass ="" or ""=""
+```
+> The SQL above is valid and will return all rows from the "Users" table, since OR ""="" is always TRUE.
 
 ```cpp
-  template <class T>
-  [[clang::jit]] auto jit() -> void {
-    std::cout << typeid(T).name() << '\n';
-  }
-
-  int main(int argc, char**) {
-    jit<argv[0]>();
-  }
 ```
 
-``` bash
-  $ ./a.out int     # prints i
-  $ ./a.out double  # prints d
+```cpp
 ```
+
+
+
+
+Read-Compile-Run-Loop (REPL)
+save binary using IR from a function
 
 Notes:
 Note the attribute on the `jit` function. This tells the JIT compiler that this
@@ -220,7 +345,7 @@ function should be JITted.
 And we pass in a string as a template parameter. The contents of that string
 become the type `T` that the function is instantiated with.
 
-----
+==============================================================================
 
 ## Mix compile-time & run-time (1)
 
@@ -231,16 +356,16 @@ become the type `T` that the function is instantiated with.
     using T = std::common_type_t<decltype(Ns)..., decltype(ns)...>;
     std::vector<T> v{Ns..., ns...};
     std::sort(std::begin(v), std::end(v));
-    
+
     // return comma-separated string (=> NTTP parameter pack)
     std::stringstream sorted{};
-    std::copy(std::begin(v), std::end(v), 
+    std::copy(std::begin(v), std::end(v),
               std::make_ostream_joiner(sorted, ","));
     return sorted.str();
   };
 ```
 
-Notes: 
+Notes:
 Here is a sort function that takes some of its parameters as NTTPs, and the rest
 as runtime values.
 
@@ -286,55 +411,6 @@ Notes:
 
 Let's think about some more powerful use cases when we mix in features from
 C++20 and beyond.
-
-==============================================================================
-
-### Agenda
-
-* Motivation & explanation
-  * what is JITting
-  * why use it?
-  * benefits, pros & cons
-
-* Existing solutions
-  * other language comparisons
-  * cling
-  * jitting vs compile-time eval (e.g. from D)
-
-----
-
-### Agenda
-
-* How it works
-  * P1609: the proposal
-  * integration/interaction with the compiler
-
-* Use cases
-  * flexible code at runtime
-  * evaluating strings
-  * extending libraries at runtime
-  * FFI uses
-
-----
-
-### Agenda
-
-* C++20 feature combinations
-  * default-constructible lambdas
-  * lambdas in unevaluated contexts
-  * familiar template syntax lambdas
-  * concepts
-
-* C++2b feature possibilities
-  * combination with reflection
-
-----
-
-### Agenda
-
-* Compilation mechanisms
-  * propagating optimizations
-  * producing binaries
 
 ==============================================================================
 
@@ -455,15 +531,19 @@ call<decltype([]{}>();    // Also Okay, which is great for generated code as the
 
 ==============================================================================
 
-### Summary
+## Summary
 
 ==============================================================================
 
-## Let's JIT all the things!
+### Let's `JIT` all the things!
+
+---
 
 ### Questions?
 
-#### Quantlab Financial
+---
+
+#### Ben Deane & Kris Jusiak - Quantlab Financial
           </script>
         </section>
 
