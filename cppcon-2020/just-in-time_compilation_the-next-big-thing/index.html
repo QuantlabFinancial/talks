@@ -50,7 +50,7 @@
 
 ---
 
-#### Ben Deane & Kris Jusiak - Quantlab Financial
+#### Ben Deane & Kris Jusiak - [Quantlab Financial](https://www.quantlab.com/careers)
 
 Note:
 Introductions:
@@ -234,7 +234,7 @@ template GenStruct(string Name, string M1) {
 <!-- .element: class="fragment" data-fragment-index="1" -->
 
 ```d
-mixin(GenStruct!("Foo", "bar")); // [[clang::jit]] at Compile-time
+mixin(GenStruct!("Foo", "bar")); // [[clang::jit]] at compile-time
 ```
 <!-- .element: class="fragment" data-fragment-index="2" -->
 
@@ -296,11 +296,11 @@ $CXX -fjit hello_world.cpp -o hello_world.out
 ```
 <!-- .element: class="fragment" data-fragment-index="2" -->
 
-```sh
-ls -lh hello_world.out # 3M
-# compiler is included in the binary and pre-compiled module of the host
-```
+<pre><code>ls -lh hello_world.out</code> -> <font color="white">75M</font></pre>
 <!-- .element: class="fragment" data-fragment-index="3" -->
+
+##### Compiler is included in the binary and pre-compiled module of the host
+<!-- .element: class="fragment" data-fragment-index="4" -->
 
 ----
 
@@ -330,7 +330,9 @@ template<class T>
 ```
 <!-- .element: class="fragment" data-fragment-index="1" -->
 
-<pre><code>./hello_world.out "decltype([]{ std::puts("Hello world from JIT!); })"</code> -> <font color="lime">Hello world from JIT!</font></pre>
+<pre><code>./hello_world.out "decltype([]{
+                     std::puts("Hello world from JIT!);
+                  })"</code> -> <font color="lime">Hello world from JIT!</font></pre>
 <!-- .element: class="fragment" data-fragment-index="2" -->
 
 ---
@@ -418,7 +420,7 @@ template<auto Expr>
 
 ----
 
-### Type -> String -> Type
+### Meta
 
 ```cpp
 template<auto N>
@@ -443,9 +445,7 @@ const auto value = make_const<40>(2); // "std::integral_constant<42>"
 ```
 <!-- .element: class="fragment" data-fragment-index="3" -->
 
-```cpp
-jit<value>(); // jit<std::integral_constant<42>>
-```
+<pre><code>jit< value >()</code> -> <font color="white">std::integral_constant<42></font></pre>
 <!-- .element: class="fragment" data-fragment-index="4" -->
 
 ----
@@ -691,11 +691,16 @@ constexpr [[clang::jit]] // compile/run-time
 
 ==============================================================================
 
+---
+
 ### Let's `JIT` all the things?!
+### Questions?
 
 ---
 
-### Questions?
+#### https://github.com/QuantlabFinancial | https://www.quantlab.com/careers
+
+
           </script>
         </section>
 
