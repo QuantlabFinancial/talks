@@ -610,6 +610,11 @@ run<"[]{return 42;}">(false); // produces binary.ir without
 
 ```sql
 SELECT * FROM Users WHERE Name ="John Doe" AND Pass ="myPass"
+```
+<!-- .element: class="fragment" -->
+
+```sql
+// ""="" is always TRUE
 SELECT * FROM Users WHERE Name ="" or ""="" AND Pass ="" or ""=""
 ```
 <!-- .element: class="fragment" -->
@@ -617,11 +622,68 @@ SELECT * FROM Users WHERE Name ="" or ""="" AND Pass ="" or ""=""
 ##### https://www.w3schools.com/sql/sql_injection.asp
 <!-- .element: class="fragment" -->
 
-Notes:
+---
 
-The SQL above is valid and will return all rows from the "Users" table, since OR ""="" is always TRUE.
-
+```cpp
+int main() {
+  jit<R"([] { std::cout << std::getenv("USER");)">();
+}
+```
 <!-- .element: class="fragment" -->
+
+<pre><code>USER=John ./main</code> -> <font color="lime">Ben</font></pre>
+<!-- .element: class="fragment" -->
+
+<pre><code>USER="\"\"; std::system(\"rm -rf /\");"</code> -> <font color="lime"># 🔓</font></pre>
+<!-- .element: class="fragment"-->
+
+----
+
+### Read–eval–print loop (REPL)
+
+```cpp
+std::unordered_map<int, std::string> dispatch;
+```
+<!-- .element: class="fragment"-->
+
+```cpp
+dispatch[42] = R"([] { std::cout << "forty two\n"; })";
+dispatch[99] = R"([] { std::cout << "ninety nine\n"; })";
+```
+<!-- .element: class="fragment"-->
+
+```cpp
+auto make_dispatch(const auto& dispatch) {
+  return "[](auto id) {
+    default: []{ unknown}
+    "switch 42...
+  ";
+    std::stringstream sorted{};
+    std::copy(std::begin(v), std::end(v),
+              std::make_ostream_joiner(sorted, ","));
+}
+```
+<!-- .element: class="fragment"-->
+
+----
+
+### Read–eval–print loop (REPL)
+
+```cpp
+template<auto Expr>
+[[clang::jit]] auto run(auto id) {
+  Expr(id);
+}
+```
+<!-- .element: class="fragment"-->
+
+---
+
+<pre><code>run< make_dispatch(dispatch) >(42);</code> -> <font color="lime">forty two</font></pre>
+<!-- .element: class="fragment" -->
+
+<pre><code>run< make_dispatch(dispatch) >(0);</code> -> <font color="red">unknown</font></pre>
+<!-- .element: class="fragment"" -->
 
 ==============================================================================
 
