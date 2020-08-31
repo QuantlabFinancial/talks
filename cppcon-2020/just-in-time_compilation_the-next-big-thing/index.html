@@ -83,7 +83,7 @@ Introductions:
 
 ---
 
-##### * Based on [P1609](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2020/p1609r3.html)
+##### * Based on [P1609r1](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2020/p1609r3.html)
 <!-- .element: class="fragment" data-fragment-index="2" -->
 
 ==============================================================================
@@ -195,7 +195,7 @@ like adopting version control.
 * #### [Runtime Compiled C++](https://github.com/RuntimeCompiledCPlusPlus) / [Easy-Jit](https://github.com/jmmartinez/easy-just-in-time)
 <!-- .element: class="fragment" data-fragment-index="2" -->
 
-* #### <ins>[[clang::jit]] - [P1609](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2020/p1609r3.html)</ins>*
+* #### <ins>[[clang::jit]] - [P1609r1](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2020/p1609r3.html)</ins>*
 <!-- .element: class="fragment" data-fragment-index="4" -->
 
 * #### [D mixin](https://dlang.org/articles/mixin.html)**
@@ -216,7 +216,7 @@ like adopting version control.
 
 ### Cling vs [[clang::jit]]
 
-* `Cling` is primarily a REPL and always JIT compiles the whole program with minimal optimization
+* `Cling` is primarily a Read–eval–print loop (REPL) and always JIT compiles the whole program with minimal optimization
 <!-- .element: class="fragment" -->
 
 * `[[clang::jit]]` is a C++ language extension to allow JIT compilation of specifically-annotated functions with user-supplied run-time constants for maximal optimizations not even possible at build time
@@ -250,11 +250,11 @@ struct Foo { int bar; }
 
 ==============================================================================
 
-### How it works
+## How it works
 
 ----
 
-### Hello World - [P1609](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2020/p1609r3.html)
+### Hello World - [P1609r1](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2020/p1609r3.html)
 
 ```cpp
 template <class T>
@@ -280,7 +280,7 @@ auto jit() {
 
 ----
 
-### Hello World - [P1609](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2020/p1609r3.html)
+### Hello World - [P1609r1](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2020/p1609r3.html)
 
 ```cpp
 int main(int argc, const char** argv) {
@@ -304,7 +304,7 @@ ls -lh hello_world.out # 3M
 
 ----
 
-### Hello World - [P1609](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2020/p1609r3.html)
+### Hello World - [P1609r1](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2020/p1609r3.html)
 
 <pre><code>./hello_world.out "int"</code> -> <font color="lime">i</font></pre>
 <!-- .element: class="fragment" data-fragment-index="1" -->
@@ -320,7 +320,7 @@ ls -lh hello_world.out # 3M
 
 ----
 
-### Hello World - [P1609](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2020/p1609r3.html)
+### Hello World - [P1609r1](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2020/p1609r3.html)
 
 ```cpp
 template<class T>
@@ -362,7 +362,7 @@ template<auto Expr>
 <!-- .element: class="fragment" data-fragment-index="2" -->
 
 ```cpp
-    Expr(); // throws
+    Expr(); // throws clang_compile_error
 ```
 <!-- .element: class="fragment" data-fragment-index="3" -->
 
@@ -454,61 +454,14 @@ jit<value>(); // jit<std::integral_constant<42>>
 
 <a href="https://www.youtube.com/watch?v=6dv9vdGIaWs"><img src="images/jit.png" style="width: 75%; background:none; border:none; box-shadow:none;" /></a>
 
-----
-
-### Pros
-
-* #### Support for types
-<!-- .element: class="fragment" -->
-
-* #### Direct access to the host
-<!-- .element: class="fragment" -->
-
-* #### compile-time performance
-<!-- .element: class="fragment" -->
-
-  * #### Memoization
-<!-- .element: class="fragment" -->
-
-* #### Run-time performance
-<!-- .element: class="fragment" -->
-
-  * #### Optimizations based on data
-<!-- .element: class="fragment" -->
-
-  * ####  Optimizations based hardware
-<!-- .element: class="fragment" -->
-
-----
-
-### Cons
-
-* #### Based on strings - might be overused
-<!-- .element: class="fragment" -->
-
-* #### Doesn't support compile-time injection / only run-time
-<!-- .element: class="fragment" -->
-
-----
-
-### Future?
-
-```cpp
-[[clang::jit]]           // run-time
-```
-<!-- .element: class="fragment" -->
-
-```cpp
-consteval [[clang::jit]] // compile-time
-```
-<!-- .element: class="fragment" -->
-
-```cpp
-constexpr [[clang::jit]] // compile/run-time
-```
+#### https://github.com/hfinkel/llvm-project-cxxjit
 <!-- .element: class="fragment" -->
 
 ==============================================================================
+
+## Examples: C++20 and beyond
+
+----
 
 ### Mix compile-time & run-time (1)
 
@@ -604,6 +557,11 @@ run<"[]{return 42;}">(false); // produces binary.ir without
 #### * Intermediate representation (IR)
 <!-- .element: class="fragment" data-fragment-index="4" -->
 
+```sh
+llc -filetype=obj binary.ir -o binary.o # IR to object file
+```
+<!-- .element: class="fragment" data-fragment-index="6" -->
+
 ----
 
 ### CPP Injection
@@ -631,10 +589,10 @@ int main() {
 ```
 <!-- .element: class="fragment" -->
 
-<pre><code>USER=John ./main</code> -> <font color="lime">Ben</font></pre>
+<pre><code>USER=John ./main</code> -> <font color="lime">John</font></pre>
 <!-- .element: class="fragment" -->
 
-<pre><code>USER="\"\"; std::system(\"rm -rf /\");"</code> -> <font color="lime"># 🔓</font></pre>
+<pre><code>USER="\"\"; std::system(\"rm -rf /\");"</code> -> <font color="lime">🔓</font></pre>
 <!-- .element: class="fragment"-->
 
 ----
@@ -642,7 +600,7 @@ int main() {
 ### Read–eval–print loop (REPL)
 
 ```cpp
-std::unordered_map<int, std::string> dispatch;
+std::unordered_map<int, std::string> dispatch{};
 ```
 <!-- .element: class="fragment"-->
 
@@ -688,6 +646,48 @@ template<auto Expr>
 ==============================================================================
 
 ## Summary
+
+----
+
+### Pros & Cons
+
+* #### (+) Purely C++ solution
+<!-- .element: class="fragment" -->
+
+* #### (+) Direct access to the host
+<!-- .element: class="fragment" -->
+
+* #### (+) Compile-time performance (Memoization)
+<!-- .element: class="fragment" -->
+
+* #### (+) Run-time performance (Optimizations based on data/hardware)
+<!-- .element: class="fragment" -->
+
+* #### (-) Based on strings (security conernces)
+<!-- .element: class="fragment" -->
+
+* #### (-) Doesn't support compile-time injection
+<!-- .element: class="fragment" -->
+
+----
+
+### Future?
+
+```cpp
+[[clang::jit]]           // run-time
+```
+<!-- .element: class="fragment" -->
+
+```cpp
+consteval [[clang::jit]] // compile-time
+```
+<!-- .element: class="fragment" -->
+
+```cpp
+constexpr [[clang::jit]] // compile/run-time
+```
+<!-- .element: class="fragment" -->
+
 
 ==============================================================================
 
@@ -807,21 +807,6 @@ template<auto Expr>
           { src: 'extensions/plugin/line-numbers/line-numbers.js' }
         ]
       });
-
-      <!--window.addEventListener("mousedown", handleClick, false);-->
-      <!--window.addEventListener("contextmenu", function(e) { e.preventDefault(); }, false);-->
-
-      <!--function handleClick(e) {-->
-        <!--if (1 >= outerHeight - innerHeight) {-->
-          <!--document.querySelector( '.reveal' ).style.cursor = 'none';-->
-        <!--} else {-->
-          <!--document.querySelector( '.reveal' ).style.cursor = '';-->
-        <!--}-->
-
-        <!--e.preventDefault();-->
-        <!--if(e.button === 0) Reveal.next();-->
-        <!--if(e.button === 2) Reveal.prev();-->
-      <!--}-->
     </script>
 
   </body>
