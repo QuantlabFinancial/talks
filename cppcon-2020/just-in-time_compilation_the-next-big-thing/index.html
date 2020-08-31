@@ -584,7 +584,8 @@ SELECT * FROM Users WHERE Name ="" or ""="" AND Pass ="" or ""=""
 
 ```cpp
 int main() {
-  jit<R"([] { std::cout << std::getenv("USER");)">();
+  jit<"decltype([] {
+    std::cout << \""s + std::getenv("USER") + "\"; })"s>();
 }
 ```
 <!-- .element: class="fragment" -->
@@ -592,7 +593,7 @@ int main() {
 <pre><code>USER=John ./main</code> -> <font color="lime">John</font></pre>
 <!-- .element: class="fragment" -->
 
-<pre><code>USER="\"\"; std::system(\"rm -rf /\");"</code> -> <font color="lime">🔓</font></pre>
+<pre><code>USER="\";std::system(\"rm -rf /\");\""</code> // <font color="gray">decltype([] { std::cout << "";std::system("rm -rf /");""; })</font><br/> -> <font color="lime">🔓</font></pre>
 <!-- .element: class="fragment"-->
 
 ----

@@ -1,4 +1,5 @@
 #include <iostream>
+#include <string>
 
 template<class TExpr>
 [[clang::jit]] auto jit() -> void {
@@ -6,5 +7,6 @@ template<class TExpr>
 }
 
 int main(int argc, const char** argv) {
-  jit<R"(decltype([] { std::cout << std::getenv("USER");}))">();
+  using std::literals::string_literals::operator""s;
+  jit<"decltype([] { std::cout << \""s + std::getenv("USER") + "\"; })"s>();
 }
