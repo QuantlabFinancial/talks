@@ -262,12 +262,13 @@ template <class T>
 <!-- .element: class="fragment" data-fragment-index="1" -->
 
 ```cpp
-[[clang::jit]] // Instantiation at run-time Point-Of-Instantiation
+[[clang::jit]] // instantiation at run-time
+               // Point-Of-Instantiation (POI)
 ```
 <!-- .element: class="fragment" data-fragment-index="4" -->
 
 ```cpp
-auto jit() {
+auto jit() -> void {
   std::cout << typeid(T).name() << '\n';
 }
 ```
@@ -275,8 +276,11 @@ auto jit() {
 
 ---
 
-<pre><code>jit< int >()</code> -> <font color="lime">i</font></pre>
+<pre><code>jit< int >()   // type</code> -> <font color="lime">i</font></pre>
 <!-- .element: class="fragment" data-fragment-index="3" -->
+
+<pre><code>jit< "int" >() // string/type</code> -> <font color="lime">i</font></pre>
+<!-- .element: class="fragment" data-fragment-index="5" -->
 
 ----
 
@@ -325,7 +329,7 @@ $CXX -fjit hello_world.cpp -o hello_world
 
 ```cpp
 template<class T>
-[[clang::jit]] auto jit() {
+[[clang::jit]] auto jit() -> void {
   T{}(); // invokes lambda expression
 }
 ```
@@ -340,7 +344,7 @@ template<class T>
 
 ```cpp
 template<auto Expr>
-[[clang::jit]] auto jit() {
+[[clang::jit]] auto jit() -> void {
   Expr();
 }
 ```
@@ -355,7 +359,7 @@ template<auto Expr>
 
 ```cpp
 template<auto Expr>
-[[clang::jit]] auto jit() {
+[[clang::jit]] auto jit() -> void {
 ```
 <!-- .element: class="fragment" data-fragment-index="1" -->
 
@@ -619,13 +623,14 @@ template<auto Expr>
 <!-- .element: class="fragment" data-fragment-index="1" -->
 
 ```cpp
-[[clang::jit("CXXFLAGS=-O3, out=run.ir")] run(bool execute) {
+[[clang::jit("CXXFLAGS=-O3, out=run.ir")]
+auto run(bool execute) -> void {
 ```
 <!-- .element: class="fragment" data-fragment-index="2" -->
 
 ```cpp
   if (execute) {
-    return Expr();
+    Expr();
   } // otherwise only instantiate
 ```
 <!-- .element: class="fragment" data-fragment-index="3" -->
@@ -644,7 +649,7 @@ run<"[]{ std::cout << 42; }">(true); // produces run.ir*
 
 ```cpp
 run<"[]{ std::cout << 42; }">(false); // produces run.ir without
-                                      // running the function
+                                      // running the expression
 ```
 <!-- .element: class="fragment" data-fragment-index="5" -->
 
@@ -670,12 +675,12 @@ int main() {
 ---
 
 ```sh
-llc -filetype=obj run.ir -o run.o
+llc -filetype=obj run.ir -o run.o # IR to an object file
 ```
 <!-- .element: class="fragment" -->
 
 ```sh
-clang++ run.o main.cpp -o binary # no -fjit required
+clang++ run.o main.cpp -o binary  # no -fjit required
 ```
 <!-- .element: class="fragment" -->
 
@@ -684,7 +689,7 @@ clang++ run.o main.cpp -o binary # no -fjit required
 
 ---
 
-<pre><code>ls -lh binary</code> -> <font color="white">1.3M # Compiler not included</font></pre>
+<pre><code>ls -lh binary</code> -> <font color="white">1.3M # compiler is not included</font></pre>
 <!-- .element: class="fragment" -->
 
 <pre><code>nm binary | grep run</code> -> <font color="white">_Z3runb</font></pre>
@@ -692,7 +697,7 @@ clang++ run.o main.cpp -o binary # no -fjit required
 
 ----
 
-### CPP Injection
+### CPP Injection / Security breach
 
 ```sql
 SELECT * FROM Users WHERE Name ="John Doe" AND Pass ="myPass"
@@ -700,7 +705,7 @@ SELECT * FROM Users WHERE Name ="John Doe" AND Pass ="myPass"
 <!-- .element: class="fragment" -->
 
 ```sql
-// ""="" is always TRUE
+-- ""="" is always TRUE
 SELECT * FROM Users WHERE Name ="" or ""="" AND Pass ="" or ""=""
 ```
 <!-- .element: class="fragment" -->
@@ -768,7 +773,6 @@ consteval [[clang::jit]] // compile-time
 constexpr [[clang::jit]] // compile/run-time
 ```
 <!-- .element: class="fragment" -->
-
 
 ==============================================================================
 
