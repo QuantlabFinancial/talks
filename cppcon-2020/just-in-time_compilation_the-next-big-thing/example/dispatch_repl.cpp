@@ -6,6 +6,7 @@ struct bar { static constexpr auto on(auto event) { std::cout << "bar"; } };
 
 struct e1 {};
 struct e2 {};
+struct e3 {};
 
 auto join(const auto& map, auto expr, auto separator) {
   std::string result{};

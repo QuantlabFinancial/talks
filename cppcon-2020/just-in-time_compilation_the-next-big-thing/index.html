@@ -315,7 +315,7 @@ $CXX -fjit hello_world.cpp -o hello_world
 <pre><code>./hello_world "decltype([]{})"</code> -> <font color="lime">3$_0</font></pre>
 <!-- .element: class="fragment" data-fragment-index="4" -->
 
-<pre><code>./hello_world "error"</code> -> <font color="red">terminate called after throwing an instance of 'clang_compile_error'</font></pre>
+<pre><code>./hello_world "error"</code> -> <font color="salmon">terminate called after throwing an instance of 'clang_compile_error'</font></pre>
 <!-- .element: class="fragment" data-fragment-index="3" -->
 
 ----
@@ -382,7 +382,7 @@ template<auto Expr>
 
 ---
 
-<pre><code>jit<"foo">()</code> -> <font color="red">error: 'foo' was not declared in this scope</font></pre>
+<pre><code>jit<"foo">()</code> -> <font color="salmon">error: 'foo' was not declared in this scope</font></pre>
 <!-- .element: class="fragment" data-fragment-index="4" -->
 
 ----
@@ -415,7 +415,7 @@ template<auto Expr>
 <pre>-> <font color="lime">assert(compiles<"[]{}">())</font></pre>
 <!-- .element: class="fragment" data-fragment-index="3" -->
 
-<pre>-> <font color="red">assert(compiles<"[}">())</font></pre>
+<pre>-> <font color="salmon">assert(compiles<"[}">())</font></pre>
 <!-- .element: class="fragment" data-fragment-index="4" -->
 
 ----
@@ -530,6 +530,7 @@ struct bar { static auto on(auto event) { std::cout << "bar"; } };
 // Events
 struct e1 {};
 struct e2 {};
+struct e3 {};
 ```
 <!-- .element: class="fragment"-->
 
@@ -598,7 +599,13 @@ template<class TDispatcher, auto TEvent>
 <pre><code>dispatch< make_dispatcher(dispatcher), "[]{ return e2{}; }" >()</code> -> <font color="lime">bar</font></pre>
 <!-- .element: class="fragment" -->
 
-<pre><code>dispatch< make_dispatcher(dispatcher), "[]{ return e3{}; }" >()</code> // <font color="gray">run-time compilation error</font><br/> -> <font color="red">error: use of undeclared identifier 'e3'</font></pre>
+<pre><code>dispatch< make_dispatcher(dispatcher), "[]{ return e3{}; }" >()</code> // <font color="gray">run-time compilation error</font><br/> -> <font color="salmon">error: type 'mp_map_find<
+      mp_list< pair<e2, bar>, pair<e1, foo> >, decltype((lambda at <built-in>:1:10)())
+      >' (aka 'void')
+    cannot be used prior to '::' because it has no members</font></pre>
+<!-- .element: class="fragment" -->
+
+<pre><code>dispatch< make_dispatcher(dispatcher), "[]{ return e4{}; }" >()</code> // <font color="gray">run-time compilation error</font><br/> -> <font color="salmon">error: use of undeclared identifier 'e4'</font></pre>
 <!-- .element: class="fragment" -->
 
 ----
