@@ -292,11 +292,11 @@ int main(int argc, const char** argv) {
 ---
 
 ```cpp
-$CXX -fjit hello_world.cpp -o hello_world.out
+$CXX -fjit hello_world.cpp -o hello_world
 ```
 <!-- .element: class="fragment" data-fragment-index="2" -->
 
-<pre><code>ls -lh hello_world.out</code> -> <font color="white">75M</font></pre>
+<pre><code>ls -lh hello_world</code> -> <font color="white">75M</font></pre>
 <!-- .element: class="fragment" data-fragment-index="3" -->
 
 ##### Compiler is included in the binary and pre-compiled module of the host
@@ -306,16 +306,16 @@ $CXX -fjit hello_world.cpp -o hello_world.out
 
 ### Hello World - [P1609r1](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2020/p1609r3.html)
 
-<pre><code>./hello_world.out "int"</code> -> <font color="lime">i</font></pre>
+<pre><code>./hello_world "int"</code> -> <font color="lime">i</font></pre>
 <!-- .element: class="fragment" data-fragment-index="1" -->
 
-<pre><code>./hello_world.out "double"</code> -> <font color="lime">d</font></pre>
+<pre><code>./hello_world "double"</code> -> <font color="lime">d</font></pre>
 <!-- .element: class="fragment" data-fragment-index="2" -->
 
-<pre><code>./hello_world.out "error"</code> -> <font color="red">terminate called after throwing an instance of 'clang_compile_error'</font></pre>
+<pre><code>./hello_world "error"</code> -> <font color="red">terminate called after throwing an instance of 'clang_compile_error'</font></pre>
 <!-- .element: class="fragment" data-fragment-index="3" -->
 
-<pre><code>./hello_world.out "decltype([]{})"</code> -> <font color="lime">$0</font></pre>
+<pre><code>./hello_world "decltype([]{})"</code> -> <font color="lime">3$_0</font></pre>
 <!-- .element: class="fragment" data-fragment-index="4" -->
 
 ----
@@ -330,7 +330,7 @@ template<class T>
 ```
 <!-- .element: class="fragment" data-fragment-index="1" -->
 
-<pre><code>./hello_world.out "decltype([]{
+<pre><code>./hello_world "decltype([]{
                      std::puts("Hello world from JIT!);
                   })"</code> -> <font color="lime">Hello world from JIT!</font></pre>
 <!-- .element: class="fragment" data-fragment-index="2" -->
@@ -345,7 +345,7 @@ template<auto Expr>
 ```
 <!-- .element: class="fragment" data-fragment-index="3" -->
 
-<pre><code>./hello_world.out "[]{ std::puts("Hello world from JIT!); }"</code> -> <font color="lime">Hello world from JIT!</font></pre>
+<pre><code>./hello_world "[]{ std::puts("Hello world from JIT!); }"</code> -> <font color="lime">Hello world from JIT!</font></pre>
 <!-- .element: class="fragment" data-fragment-index="4" -->
 
 ----
@@ -517,7 +517,93 @@ Note that `sort` doesn't have to be `constexpr`!
 
 ----
 
-### Make binary
+### Dispatch / Read–eval–print loop (REPL)
+
+```cpp
+// Handlers
+struct foo { static auto on(auto event) { std::cout << "foo"; } };
+struct bar { static auto on(auto event) { std::cout << "bar"; } };
+```
+<!-- .element: class="fragment"-->
+
+```cpp
+// Events
+struct e1 {};
+struct e2 {};
+```
+<!-- .element: class="fragment"-->
+
+---
+
+```cpp
+// Run-time dispatch
+std::unordered_map<std::string, std::string> dispatcher = {
+  { "e1", "foo" },
+  { "e2", "bar" }
+};
+```
+<!-- .element: class="fragment"-->
+
+----
+
+### Dispatch / Read–eval–print loop (REPL)
+
+```cpp
+constexpr auto make_dispatcher(const auto& dispatcher) {
+```
+<!-- .element: class="fragment" data-fragment-index="1" -->
+
+```cpp
+  return "boost::mp11::mp_list<" +
+    join(dispatcher, [](const auto& e) {
+      return "std::pair<" + e.first + ',' + e.second + '>';
+    }, ",") +
+  '>';
+```
+<!-- .element: class="fragment" data-fragment-index="2" -->
+
+```cpp
+}
+```
+<!-- .element: class="fragment" data-fragment-index="1" -->
+
+---
+
+```cpp
+template<class TDispatcher, auto TEvent>
+[[clang::jit]] auto dispatch() -> void {
+```
+<!-- .element: class="fragment" data-fragment-index="3" -->
+
+```cpp
+  using dispatch_t = typename
+    mp11::mp_map_find<TDispatcher, decltype(TEvent())>::second_type;
+
+  dispatch_t::on(TEvent());
+```
+<!-- .element: class="fragment" data-fragment-index="4" -->
+
+```cpp
+}
+```
+<!-- .element: class="fragment" data-fragment-index="3" -->
+
+----
+
+### Dispatch / Read–eval–print loop (REPL)
+
+<pre><code>dispatch< make_dispatcher(dispatcher), "[]{ return e1{}; }" >()</code> -> <font color="lime">foo</font></pre>
+<!-- .element: class="fragment" -->
+
+<pre><code>dispatch< make_dispatcher(dispatcher), "[]{ return e2{}; }" >()</code> -> <font color="lime">bar</font></pre>
+<!-- .element: class="fragment" -->
+
+<pre><code>dispatch< make_dispatcher(dispatcher), "[]{ return e3{}; }" >()</code> // <font color="gray">run-time compilation error</font><br/> -> <font color="red">error: use of undeclared identifier 'e3'</font></pre>
+<!-- .element: class="fragment" -->
+
+----
+
+### Save library/binary
 
 ```cpp
 template<auto Expr>
@@ -525,7 +611,7 @@ template<auto Expr>
 <!-- .element: class="fragment" data-fragment-index="1" -->
 
 ```cpp
-[[clang::jit("CXXFLAGS=-O3, out=binary.ir")] run(bool execute) {
+[[clang::jit("CXXFLAGS=-O3, out=run.ir")] run(bool execute) {
 ```
 <!-- .element: class="fragment" data-fragment-index="2" -->
 
@@ -544,23 +630,57 @@ template<auto Expr>
 ---
 
 ```cpp
-run<"[]{return 42;}">(true); // produces binary.ir*
+run<"[]{ std::cout << 42; }">(true); // produces run.ir*
 ```
 <!-- .element: class="fragment" data-fragment-index="4" -->
 
 ```cpp
-run<"[]{return 42;}">(false); // produces binary.ir without
-                              // running the function
+run<"[]{ std::cout << 42; }">(false); // produces run.ir without
+                                      // running the function
 ```
 <!-- .element: class="fragment" data-fragment-index="5" -->
 
 #### * Intermediate representation (IR)
 <!-- .element: class="fragment" data-fragment-index="4" -->
 
-```sh
-llc -filetype=obj binary.ir -o binary.o # IR to object file
+----
+
+### Save library/binary
+
+```cpp
+auto run(bool) -> void;
 ```
-<!-- .element: class="fragment" data-fragment-index="6" -->
+<!-- .element: class="fragment" -->
+
+```cpp
+int main() {
+  run(true); // templates are in IR (removed from the mangled symbol)
+}
+```
+<!-- .element: class="fragment" -->
+
+---
+
+```sh
+llc -filetype=obj run.ir -o run.o
+```
+<!-- .element: class="fragment" -->
+
+```sh
+clang++ run.o main.cpp -o binary # no -fjit required
+```
+<!-- .element: class="fragment" -->
+
+<pre><code>./binary</code> -> <font color="lime">42</font></pre>
+<!-- .element: class="fragment" -->
+
+---
+
+<pre><code>ls -lh binary</code> -> <font color="white">1.3M # Compiler not included</font></pre>
+<!-- .element: class="fragment" -->
+
+<pre><code>nm binary | grep run</code> -> <font color="white">_Z3runb</font></pre>
+<!-- .element: class="fragment" -->
 
 ----
 
@@ -590,59 +710,11 @@ int main() {
 ```
 <!-- .element: class="fragment" -->
 
-<pre><code>USER=John ./main</code> -> <font color="lime">John</font></pre>
+<pre><code>USER=John ./cpp_injection</code> -> <font color="lime">John</font></pre>
 <!-- .element: class="fragment" -->
 
-<pre><code>USER="\";std::system(\"rm -rf /\");\""</code> // <font color="gray">decltype([] { std::cout << "";std::system("rm -rf /");""; })</font><br/> -> <font color="lime">🔓</font></pre>
+<pre><code>USER="\";std::system(\"rm -rf /\");\"" ./cpp_injection</code> // <font color="gray">decltype([] { std::cout << "";std::system("rm -rf /");""; })</font><br/> -> <font color="lime">🔓</font></pre>
 <!-- .element: class="fragment"-->
-
-----
-
-### Read–eval–print loop (REPL)
-
-```cpp
-std::unordered_map<int, std::string> dispatch{};
-```
-<!-- .element: class="fragment"-->
-
-```cpp
-dispatch[42] = R"([] { std::cout << "forty two\n"; })";
-dispatch[99] = R"([] { std::cout << "ninety nine\n"; })";
-```
-<!-- .element: class="fragment"-->
-
-```cpp
-auto make_dispatch(const auto& dispatch) {
-  return "[](auto id) {
-    default: []{ unknown}
-    "switch 42...
-  ";
-    std::stringstream sorted{};
-    std::copy(std::begin(v), std::end(v),
-              std::make_ostream_joiner(sorted, ","));
-}
-```
-<!-- .element: class="fragment"-->
-
-----
-
-### Read–eval–print loop (REPL)
-
-```cpp
-template<auto Expr>
-[[clang::jit]] auto run(auto id) {
-  Expr(id);
-}
-```
-<!-- .element: class="fragment"-->
-
----
-
-<pre><code>run< make_dispatch(dispatch) >(42);</code> -> <font color="lime">forty two</font></pre>
-<!-- .element: class="fragment" -->
-
-<pre><code>run< make_dispatch(dispatch) >(0);</code> -> <font color="red">unknown</font></pre>
-<!-- .element: class="fragment"" -->
 
 ==============================================================================
 
@@ -661,7 +733,7 @@ template<auto Expr>
 * #### (+) Compile-time performance (Memoization)
 <!-- .element: class="fragment" -->
 
-* #### (+) Run-time performance (Optimizations based on data/hardware)
+* #### (+) Run-time performance (Optimizations based run-time on data/hardware)
 <!-- .element: class="fragment" -->
 
 * #### (-) Based on strings (security conernces)
