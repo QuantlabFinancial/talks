@@ -313,10 +313,11 @@ $CXX -fjit hello_world.cpp -o hello_world
 <!-- .element: class="fragment" data-fragment-index="2" -->
 
 <pre><code>./hello_world "decltype([]{})"</code> -> <font color="lime">3$_0</font></pre>
-<!-- .element: class="fragment" data-fragment-index="4" -->
-
-<pre><code>./hello_world "error"</code> -> <font color="salmon">terminate called after throwing an instance of 'clang_compile_error'</font></pre>
 <!-- .element: class="fragment" data-fragment-index="3" -->
+
+<pre><code>./hello_world "error"</code> -> <font color="salmon">terminate called after throwing an instance of
+    'clang_compile_error'</font></pre>
+<!-- .element: class="fragment" data-fragment-index="4" -->
 
 ----
 
@@ -415,7 +416,7 @@ template<auto Expr>
 <pre>-> <font color="lime">assert(compiles<"[]{}">())</font></pre>
 <!-- .element: class="fragment" data-fragment-index="3" -->
 
-<pre>-> <font color="salmon">assert(compiles<"[}">())</font></pre>
+<pre>-> <font color="salmon">assert(not compiles<"[}">())</font></pre>
 <!-- .element: class="fragment" data-fragment-index="4" -->
 
 ----
