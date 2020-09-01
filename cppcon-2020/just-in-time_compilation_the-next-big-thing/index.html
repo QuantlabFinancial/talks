@@ -312,11 +312,11 @@ $CXX -fjit hello_world.cpp -o hello_world
 <pre><code>./hello_world "double"</code> -> <font color="lime">d</font></pre>
 <!-- .element: class="fragment" data-fragment-index="2" -->
 
-<pre><code>./hello_world "error"</code> -> <font color="red">terminate called after throwing an instance of 'clang_compile_error'</font></pre>
-<!-- .element: class="fragment" data-fragment-index="3" -->
-
 <pre><code>./hello_world "decltype([]{})"</code> -> <font color="lime">3$_0</font></pre>
 <!-- .element: class="fragment" data-fragment-index="4" -->
+
+<pre><code>./hello_world "error"</code> -> <font color="red">terminate called after throwing an instance of 'clang_compile_error'</font></pre>
+<!-- .element: class="fragment" data-fragment-index="3" -->
 
 ----
 
@@ -331,8 +331,8 @@ template<class T>
 <!-- .element: class="fragment" data-fragment-index="1" -->
 
 <pre><code>./hello_world "decltype([]{
-                     std::puts("Hello world from JIT!);
-                  })"</code> -> <font color="lime">Hello world from JIT!</font></pre>
+                 std::puts(\"Hello world from JIT!\");
+              })"</code> -> <font color="lime">Hello world from JIT!</font></pre>
 <!-- .element: class="fragment" data-fragment-index="2" -->
 
 ---
@@ -345,7 +345,7 @@ template<auto Expr>
 ```
 <!-- .element: class="fragment" data-fragment-index="3" -->
 
-<pre><code>./hello_world "[]{ std::puts("Hello world from JIT!); }"</code> -> <font color="lime">Hello world from JIT!</font></pre>
+<pre><code>./hello_world "[]{ std::puts(\"Hello world from JIT!\"); }"</code> -> <font color="lime">Hello world from JIT!</font></pre>
 <!-- .element: class="fragment" data-fragment-index="4" -->
 
 ----
@@ -412,10 +412,10 @@ template<auto Expr>
 
 ---
 
-<pre><font color="lime">assert(compiles<"[]{}">())</font></pre>
+<pre>-> <font color="lime">assert(compiles<"[]{}">())</font></pre>
 <!-- .element: class="fragment" data-fragment-index="3" -->
 
-<pre><font color="red">assert(compiles<"[}">())</font></pre>
+<pre>-> <font color="red">assert(compiles<"[}">())</font></pre>
 <!-- .element: class="fragment" data-fragment-index="4" -->
 
 ----
