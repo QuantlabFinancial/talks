@@ -72,9 +72,6 @@ Introductions:
 * #### How it works*
 <!-- .element: class="fragment" data-fragment-index="2" -->
 
-  * #### Hello world
-<!-- .element: class="fragment" data-fragment-index="3" -->
-
 * #### Examples: C++20 and beyond
 <!-- .element: class="fragment" data-fragment-index="4" -->
 
@@ -195,7 +192,7 @@ like adopting version control.
 * #### [Runtime Compiled C++](https://github.com/RuntimeCompiledCPlusPlus) / [Easy-Jit](https://github.com/jmmartinez/easy-just-in-time)
 <!-- .element: class="fragment" data-fragment-index="2" -->
 
-* #### <font color="black">[[clang::jit]]</font> - [P1609r1](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2020/p1609r3.html)
+* ### <font color="white">[[clang::jit]]</font> - [P1609r1](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2020/p1609r3.html)
 <!-- .element: class="fragment" data-fragment-index="4" -->
 
 * #### [D mixin](https://dlang.org/articles/mixin.html)**
@@ -392,7 +389,7 @@ template<auto Expr>
 
 ----
 
-### Utilities
+### Utilities / compiles
 
 ```cpp
 template<auto Expr>
@@ -417,41 +414,52 @@ template<auto Expr>
 
 ---
 
-<pre>-> <font color="lime">assert(compiles<"[]{}">())</font></pre>
+<pre><code>assert(compiles<"[]{}">())</code> -> <font color="lime">👍</font></pre>
 <!-- .element: class="fragment" data-fragment-index="3" -->
 
-<pre>-> <font color="salmon">assert(not compiles<"[}">())</font></pre>
+<pre><code>assert(compiles<"[}">())</code> -> <font color="salmon">Assertion `compiles<"[}">()' failed</font></pre>
 <!-- .element: class="fragment" data-fragment-index="4" -->
 
 ----
 
-### Meta
+### Utilities / Meta
 
 ```cpp
-template<auto N>
-[[clang::jit]] auto make_const(auto n) -> std::string {
+using meta = std::string; // in the reflection proposal
+                          // meta would correspond to an
+                          // Abstract Syntax Tree (AST) node
 ```
 <!-- .element: class="fragment" data-fragment-index="1" -->
 
 ```cpp
-  return "std::integral_constant<" + std::to_string(N + n) << '\n';
+template<auto N> auto make_meta(auto n) -> meta {
 ```
 <!-- .element: class="fragment" data-fragment-index="2" -->
 
 ```cpp
+  return "std::integral_constant<int," + std::to_string(N + n) + '>';
+```
+<!-- .element: class="fragment" data-fragment-index="3" -->
+
+```cpp
 }
 ```
-<!-- .element: class="fragment" data-fragment-index="1" -->
+<!-- .element: class="fragment" data-fragment-index="2" -->
 
 ---
 
 ```cpp
-const auto value = make_const<40>(2); // "std::integral_constant<42>"
+template<auto TExpr> [[clang::jit]] auto meta_assert() -> void {
+  static_assert(TExpr());
+}
 ```
-<!-- .element: class="fragment" data-fragment-index="3" -->
-
-<pre><code>jit< value >()</code> -> <font color="white">std::integral_constant<42></font></pre>
 <!-- .element: class="fragment" data-fragment-index="4" -->
+
+<pre><code>meta_assert<"42 == " + make_meta<40>(2) + "{}">()</code> -> <font color="lime">👍</font></pre>
+<!-- .element: class="fragment" data-fragment-index="5" -->
+
+<pre><code>meta_assert<"43 == " + make_meta<40>(2) + "{}">()</code> -> <font color="salmon">error: static assertion failed</font></pre>
+<!-- .element: class="fragment" data-fragment-index="6" -->
 
 ----
 
@@ -582,8 +590,9 @@ template<class TDispatcher, auto TEvent>
 <!-- .element: class="fragment" data-fragment-index="3" -->
 
 ```cpp
-  using dispatch_t = typename
-    mp11::mp_map_find<TDispatcher, decltype(TEvent())>::second_type;
+  using dispatch_t = typename boost::mp11::mp_map_find<
+    TDispatcher, decltype(TEvent())
+  >::second_type;
 
   dispatch_t::on(TEvent());
 ```
@@ -605,8 +614,12 @@ template<class TDispatcher, auto TEvent>
 <!-- .element: class="fragment" -->
 
 <pre><code>dispatch< make_dispatcher(dispatcher), "[]{ return e3{}; }" >()</code> // <font color="gray">run-time compilation error</font><br/> -> <font color="salmon">error: type 'mp_map_find<
-      mp_list< pair<e2, bar>, pair<e1, foo> >, decltype((lambda at <built-in>:1:10)())
-      >' (aka 'void')
+                   boost::mp11::mp_list<
+                     std::pair< e2, bar >,
+                     std::pair< e1, foo >
+                   >,
+                   decltype((lambda at <built-in>:1:10)())
+                 >' (aka 'void')
     cannot be used prior to '::' because it has no members</font></pre>
 <!-- .element: class="fragment" -->
 
