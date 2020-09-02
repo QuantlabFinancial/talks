@@ -455,10 +455,10 @@ template<auto TExpr> [[clang::jit]] auto meta_assert() -> void {
 ```
 <!-- .element: class="fragment" data-fragment-index="4" -->
 
-<pre><code>meta_assert<"42 == " + make_meta<40>(2) + "{}">()</code> -> <font color="lime">👍</font></pre>
+<pre><code>meta_assert<"[]{ return 42 == " + make_meta<40>(2) + "{}; }">()</code> -> <font color="lime">👍</font></pre>
 <!-- .element: class="fragment" data-fragment-index="5" -->
 
-<pre><code>meta_assert<"43 == " + make_meta<40>(2) + "{}">()</code> -> <font color="salmon">error: static assertion failed</font></pre>
+<pre><code>meta_assert<"[]{ return 43 == " + make_meta<40>(2) + "{}; }">()</code> -> <font color="salmon">error: static assertion failed</font></pre>
 <!-- .element: class="fragment" data-fragment-index="6" -->
 
 ----
