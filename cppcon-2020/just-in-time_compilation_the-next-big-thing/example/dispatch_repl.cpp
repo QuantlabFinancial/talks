@@ -1,8 +1,8 @@
-#include <iostream>
+#include <cstdio>
 #include <string>
 
-struct foo { static constexpr auto on(auto event) { std::cout << "foo"; } };
-struct bar { static constexpr auto on(auto event) { std::cout << "bar"; } };
+struct foo { static constexpr auto on(auto event) { std::puts("foo"); } };
+struct bar { static constexpr auto on(auto event) { std::puts("bar"); } };
 
 struct e1 {};
 struct e2 {};
