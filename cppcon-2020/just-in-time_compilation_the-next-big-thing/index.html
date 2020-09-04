@@ -489,6 +489,42 @@ template<auto TExpr> [[clang::jit]] auto meta_assert() -> void {
 
 ----
 
+### C++ as a scripting language
+
+```cpp
+int main(int argc, char* argv[]) {
+  auto file_contents = [&] {
+    std::ifstream f(argv[1]);
+    f.ignore(std::numeric_limits<std::streamsize>::max(),
+             f.widen('\n'));
+    return std::string{std::istreambuf_iterator<char>{f},
+                       std::istreambuf_iterator<char>{}};
+  }();
+  run<"decltype([] {" + file_contents + "})">();
+}
+```
+<!-- .element: class="fragment" -->
+
+---
+
+```bash
+#!/usr/bin/c++-jit
+
+std::cout << "Hello, world!\n";
+```
+<!-- .element: class="fragment" -->
+
+<pre><code>./hello.cpps</code> -> <font color="lime">Hello, world!</font></pre>
+<!-- .element: class="fragment" -->
+
+Notes:
+
+We have the issue of what to do about includes of course.
+We can't include things inside a lambda expression.
+Modules to the rescue?
+
+----
+
 ### Mix compile-time & run-time (1)
 
 ```cpp
@@ -776,88 +812,75 @@ int main() {
 
 ----
 
-### C++ as a scripting language
+### JIT + concepts
 
 ```cpp
-int main(int argc, char* argv[]) {
-  auto file_contents = [&] {
-    std::ifstream f(argv[1]);
-    f.ignore(std::numeric_limits<std::streamsize>::max(),
-             f.widen('\n'));
-    return std::string{std::istreambuf_iterator<char>{f},
-                       std::istreambuf_iterator<char>{}};
-  }();
-  run<"decltype([] {" + file_contents + "})">();
-}
+template <typename T>
+concept readable_io = requires(T t, char *buf, std::size_t maxlen) {
+  { t.read(buf, maxlen) } -> std::same_as<std::size_t>;
+};
 ```
 <!-- .element: class="fragment" -->
 
----
-
-```bash
-#!/usr/bin/c++-jit
-
-std::cout << "Hello, world!\n";
+```cpp
+struct MyReadableIO {
+  std::size_t read(char* buf, std::size_t maxlen) -> std::size_t;
+};
 ```
-<!-- .element: class="fragment" -->
-
-<pre><code>./hello.cpps</code> -> <font color="lime">Hello, world!</font></pre>
 <!-- .element: class="fragment" -->
 
 Notes:
 
-We have the issue of what to do about includes of course.
-We can't include things inside a lambda expression.
-Modules to the rescue?
+Here we have a concept. Not a very good concept, but a concept nevertheless.
+
+And here we have a type that satisfies the concept.
+
+We can use JIT to check that the type satisfies the concept.
 
 ----
 
 ### JIT + concepts
 
-TBD
-
-Use cases:
-
-* User extensions & mods
-* User config at install time?
-* Robust modular API
-* Sandboxing? Use the type system to track user code?
-
-----
-
-### JIT in the compiler
-
-(Speculation)
-
-Compilation is ~becoming~ quite complicated.
-
-[P0992: Translation and Evaluation](https://wg21.link/p0992)
+```cpp
+auto check(const std::string& concept_name,
+           const std::string& type) {
+  try {
+    auto t = "[]{ using T = " + type
+               + "return T{};"
+             + "}()";
+    jit<"decltype("s
+        + "[](" + concept_name + " auto){}(" + t + ")"
+      + ")">();
+    return true;
+  } catch(const clang_compile_error&) {
+    return false;
+  }
+}
+```
+<!-- .element: class="fragment" -->
 
 Notes:
 
-Compilation is fast becoming a "big ball of mud" pattern that mixes translation
-with evaluation. In order to instantiate X, you need to evaluate Y, which mean
-you need to instantiate Z, etc. Regular SFINAE, expression SFINAE, concepts,
-etc, etc, etc.
-
-Andrew Sutton wrote a paper in which he put forward a model for compilation that
-separates translation from evaluation. This is very much a mental model that a
-JIT workflow supports. And it can be recursive.
+We can check the concept at the point where we "load" the user code, without
+incurring the full cost of compilation, and we can give them a nice error.
 
 ----
 
-### Cost/benefits of JIT in the compiler itself
+### JIT + concepts
 
-* (+) Memoized `constexpr`
+Some use cases:
+
+* User extensions & mods
 <!-- .element: class="fragment" -->
-* (+) Everything available in `constexpr` world
+* User config at "install time"
 <!-- .element: class="fragment" -->
-* (+) Data promotion from compile-time to runtime?
+* Sandboxing with the type system
 <!-- .element: class="fragment" -->
-* (-) Compilation time variability?
+
+Maybe we could also add constraints into the mix?
 <!-- .element: class="fragment" -->
-* (?) Cross compilation?
-<!-- .element: class="fragment" -->
+
+Notes:
 
 ==============================================================================
 
@@ -904,9 +927,47 @@ constexpr [[clang::jit]] // compile/run-time
 ```
 <!-- .element: class="fragment" -->
 
-==============================================================================
+----
 
----
+### JIT in the compiler
+
+(Speculation)
+
+Compilation is ~becoming~ quite complicated.
+
+[P0992: Translation and Evaluation](https://wg21.link/p0992)
+
+Notes:
+
+Compilation is fast becoming a "big ball of mud" pattern that mixes translation
+with evaluation. In order to instantiate X, you need to evaluate Y, which mean
+you need to instantiate Z, etc. Regular SFINAE, expression SFINAE, concepts,
+etc, etc, etc.
+
+Andrew Sutton wrote a paper in which he put forward a model for compilation that
+separates translation from evaluation. This is very much a mental model that a
+JIT workflow supports. And it can be recursive.
+
+----
+
+### Cost/benefits of JIT in the compiler itself
+
+* #### (+) Compile-time performance (memoized `constexpr`)
+<!-- .element: class="fragment" -->
+
+* #### (+) Everything available in `constexpr` world
+<!-- .element: class="fragment" -->
+
+* #### (+) Data promotion from compile-time to runtime?
+<!-- .element: class="fragment" -->
+
+* #### (-) Compilation time variability?
+<!-- .element: class="fragment" -->
+
+* #### (?) Cross compilation?
+<!-- .element: class="fragment" -->
+
+----
 
 ### Let's `JIT` all the things?!
 ### Questions?
