@@ -107,10 +107,15 @@ If you've seen JF's talk this is probably familiar
 One or more of these reasons:
 
 * AOT is not possible
+<!-- .element: class="fragment" -->
 * AOT is not desirable
+<!-- .element: class="fragment" -->
 * JIT gives perf benefits
+<!-- .element: class="fragment" -->
 * JIT gives productivity benefits
+<!-- .element: class="fragment" -->
 * JIT allows different workflows/use cases
+<!-- .element: class="fragment" -->
 
 Notes:
 
@@ -118,9 +123,12 @@ Notes:
 
 ### Sometimes AOT is not possible/desirable
 
-* If I don't *have* the AOT source, obviously I can't compile it.
-* If I don't *have* the parameters that will constrain the code at runtime, I can't tailor the code to them.
+* If I don't have the AOT source, obviously I can't compile it.
+<!-- .element: class="fragment" -->
+* If I don't have the parameters that will constrain the code at runtime, I can't tailor the code to them.
+<!-- .element: class="fragment" -->
 * AOT might lock me into an ABI.
+<!-- .element: class="fragment" -->
 
 Notes:
 
@@ -135,8 +143,11 @@ template. But maybe these arguments are only available at runtime.
 ### Sometimes JIT gives performance benefits
 
 * If I don't know where the source is going to be run, I can't AOT-compile with the best architecture flags.
+<!-- .element: class="fragment" -->
 * I might not be running the code on just one architecture.
-* In order to get the best possible optimization, I need the best possible information about *all* the code.
+<!-- .element: class="fragment" -->
+* In order to get the best possible optimization, I need the best possible information about all of the code.
+<!-- .element: class="fragment" -->
 
 Notes:
 
@@ -151,7 +162,9 @@ If we can reduce the amount of binary maintenance, that's probably good.
 ### Sometimes JIT is more productive
 
 * I can trade AOT-compilation time (developer time) against JIT-compilation time (user time).
+<!-- .element: class="fragment" -->
 * With JIT, I can compile just what is needed rather than accounting for all possible use cases.
+<!-- .element: class="fragment" -->
 
 Notes:
 
@@ -480,7 +493,7 @@ template<auto TExpr> [[clang::jit]] auto meta_assert() -> void {
 
 ```cpp
   template <auto... Ns>
-  constexpr auto sort = [](auto... ns) {
+  auto sort = [](auto... ns) -> std::string {
     // combine & sort CT & RT values
     using T = std::common_type_t<decltype(Ns)..., decltype(ns)...>;
     std::vector<T> v{Ns..., ns...};
@@ -493,6 +506,7 @@ template<auto TExpr> [[clang::jit]] auto meta_assert() -> void {
     return sorted.str();
   };
 ```
+<!-- .element: class="fragment" -->
 
 Notes:
 Here is a sort function that takes some of its parameters as NTTPs, and the rest
@@ -520,6 +534,7 @@ The return value is a `string` that we'll use as a parameter for a JIT function.
     verify<sort<1, 9, 3>(4, 2, 7)>();
   }
 ```
+<!-- .element: class="fragment" -->
 
 Notes:
 
@@ -759,6 +774,91 @@ int main() {
 <pre><code>USER="\";std::system(\"rm -rf /\");\"" ./cpp_injection</code> // <font color="gray">decltype([] { std::cout << "";std::system("rm -rf /");""; })</font><br/> -> <font color="lime">🔓</font></pre>
 <!-- .element: class="fragment"-->
 
+----
+
+### C++ as a scripting language
+
+```cpp
+int main(int argc, char* argv[]) {
+  auto file_contents = [&] {
+    std::ifstream f(argv[1]);
+    f.ignore(std::numeric_limits<std::streamsize>::max(),
+             f.widen('\n'));
+    return std::string{std::istreambuf_iterator<char>{f},
+                       std::istreambuf_iterator<char>{}};
+  }();
+  run<"decltype([] {" + file_contents + "})">();
+}
+```
+<!-- .element: class="fragment" -->
+
+---
+
+```bash
+#!/usr/bin/c++-jit
+
+std::cout << "Hello, world!\n";
+```
+<!-- .element: class="fragment" -->
+
+<pre><code>./hello.cpps</code> -> <font color="lime">Hello, world!</font></pre>
+<!-- .element: class="fragment" -->
+
+Notes:
+
+We have the issue of what to do about includes of course.
+We can't include things inside a lambda expression.
+Modules to the rescue?
+
+----
+
+### JIT + concepts
+
+TBD
+
+Use cases:
+
+* User extensions & mods
+* User config at install time?
+* Robust modular API
+* Sandboxing? Use the type system to track user code?
+
+----
+
+### JIT in the compiler
+
+(Speculation)
+
+Compilation is ~becoming~ quite complicated.
+
+[P0992: Translation and Evaluation](https://wg21.link/p0992)
+
+Notes:
+
+Compilation is fast becoming a "big ball of mud" pattern that mixes translation
+with evaluation. In order to instantiate X, you need to evaluate Y, which mean
+you need to instantiate Z, etc. Regular SFINAE, expression SFINAE, concepts,
+etc, etc, etc.
+
+Andrew Sutton wrote a paper in which he put forward a model for compilation that
+separates translation from evaluation. This is very much a mental model that a
+JIT workflow supports. And it can be recursive.
+
+----
+
+### Cost/benefits of JIT in the compiler itself
+
+* (+) Memoized `constexpr`
+<!-- .element: class="fragment" -->
+* (+) Everything available in `constexpr` world
+<!-- .element: class="fragment" -->
+* (+) Data promotion from compile-time to runtime?
+<!-- .element: class="fragment" -->
+* (-) Compilation time variability?
+<!-- .element: class="fragment" -->
+* (?) Cross compilation?
+<!-- .element: class="fragment" -->
+
 ==============================================================================
 
 ## Summary
@@ -779,7 +879,7 @@ int main() {
 * #### (+) Run-time performance (Optimizations based run-time on data/hardware)
 <!-- .element: class="fragment" -->
 
-* #### (-) Based on strings (security conernces)
+* #### (-) Based on strings (security concerns)
 <!-- .element: class="fragment" -->
 
 * #### (-) Doesn't support compile-time injection
