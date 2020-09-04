@@ -866,21 +866,80 @@ incurring the full cost of compilation, and we can give them a nice error.
 
 ----
 
-### JIT + concepts
+### JITting mods
 
-Some use cases:
-
-* User extensions & mods
-<!-- .element: class="fragment" -->
-* User config at "install time"
-<!-- .element: class="fragment" -->
-* Sandboxing with the type system
+* #### (+) Performance vs scripting language
 <!-- .element: class="fragment" -->
 
-Maybe we could also add constraints into the mix?
+* #### (+) Versioning is easier
+<!-- .element: class="fragment" -->
+
+* #### (+) Sandboxing with the type system
 <!-- .element: class="fragment" -->
 
 Notes:
+
+Perf vs other mod styles: e.g. scripting language.
+
+Versioning is enforced trivially by the compiler: if it compiles, it's OK.
+Compare manual versioning or DLL versioning with ABI issues.
+
+Use phantom types/tags to identify user code. Use the type system for safety.
+
+----
+
+### Sandboxing user code
+
+```cpp
+enum struct PrivilegeLevel { USER, DEVELOPER };
+```
+<!-- .element: class="fragment" -->
+
+```cpp
+template <class T, auto P>
+struct readable_io_wrapper : T {
+  constexpr auto privilege_level = P;
+};
+```
+<!-- .element: class="fragment" -->
+
+```cpp
+template <class TUserIO>
+[[clang::jit]] jit_user_readable_io() {
+  return readable_io_wrapper<TUserIO, PrivilegeLevel::USER>{};
+}
+```
+<!-- .element: class="fragment" -->
+
+```cpp
+template <class T>
+concept privileged = T:privilege_level == PrivilegeLevel::DEVELOPER;
+
+template <privileged TIO>
+auto do_privileged_io(TIO &io) { ... }
+```
+<!-- .element: class="fragment" -->
+
+Notes:
+
+----
+
+### JITting user code? Why not JIT dev code?
+
+Breaking down the walls of the compiler & linker.
+
+* #### (+) Incremental compilation on a running system
+<!-- .element: class="fragment" -->
+
+* #### (+) Patching with source code
+<!-- .element: class="fragment" -->
+
+* #### (+) Programming with concepts: platform team vs application team
+<!-- .element: class="fragment" -->
+
+Notes:
+
+
 
 ==============================================================================
 
