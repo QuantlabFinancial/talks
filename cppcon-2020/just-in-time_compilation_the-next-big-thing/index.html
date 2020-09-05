@@ -476,6 +476,24 @@ template<auto TExpr> [[clang::jit]] auto meta_assert() -> void {
 
 ----
 
+### Read–eval–print loop (REPL)
+
+std::vector<std::string> vs;
+
+```cpp
+vs.push_back("int");
+```
+
+```cpp
+vs.push_back("double");
+```
+
+```cpp
+meta_assert("[]{ return std::is_same_v<std::tuple<int, double>, " + vs | transform()...);
+```
+
+----
+
 ### How it works? - Details
 
 <a href="https://www.youtube.com/watch?v=6dv9vdGIaWs"><img src="images/jit.png" style="width: 75%; background:none; border:none; box-shadow:none;" /></a>
@@ -560,15 +578,10 @@ The return value is a `string` that we'll use as a parameter for a JIT function.
 ### Mix compile-time & run-time (2)
 
 ```cpp
-  template <auto... Ns>
-  [[clang::jit]] auto verify() -> void {
-    static_assert(std::array{1, 2, 3, 4, 7, 9}
-        == std::array{Ns...}, "Not sorted!");
-  }
-
-  int main() {
-    verify<sort<1, 9, 3>(4, 2, 7)>();
-  }
+meta_assert<"[] { return " +
+  sort<1, 9, 3>(4, 2, 7)+ " == " +
+  std::array{1, 2, 3, 4, 7, 9};
+}">();
 ```
 <!-- .element: class="fragment" -->
 
@@ -581,7 +594,7 @@ Note that `sort` doesn't have to be `constexpr`!
 
 ----
 
-### Dispatch / Read–eval–print loop (REPL)
+### Compile-time dispatch
 
 ```cpp
 // Handlers
@@ -601,8 +614,8 @@ struct e3 {};
 ---
 
 ```cpp
-// Run-time dispatch
-std::unordered_map<std::string, std::string> dispatcher = {
+// Mappings
+std::unordered_map<std::string, std::string> mapping = {
   { "e1", "foo" },
   { "e2", "bar" }
 };
@@ -611,18 +624,19 @@ std::unordered_map<std::string, std::string> dispatcher = {
 
 ----
 
-### Dispatch / Read–eval–print loop (REPL)
+### Compile-time dispatch
 
 ```cpp
-constexpr auto make_dispatcher(const auto& dispatcher) {
+constexpr auto make_dispatcher(const auto& mappings) {
 ```
 <!-- .element: class="fragment" data-fragment-index="1" -->
 
 ```cpp
   return "boost::mp11::mp_list<" +
-    join(dispatcher, [](const auto& e) {
-      return "std::pair<" + e.first + ',' + e.second + '>';
-    }, ",") +
+    join(mappings, [](const auto& mapping) {
+      const auto [ event, handler ] = mapping;
+      return "std::pair<" + event + ',' + handler + '>';
+    }, ',') +
   '>';
 ```
 <!-- .element: class="fragment" data-fragment-index="2" -->
@@ -635,17 +649,17 @@ constexpr auto make_dispatcher(const auto& dispatcher) {
 ---
 
 ```cpp
-template<class TDispatcher, auto TEvent>
+template<class TDispatcher, auto Event>
 [[clang::jit]] auto dispatch() -> void {
 ```
 <!-- .element: class="fragment" data-fragment-index="3" -->
 
 ```cpp
   using dispatch_t = typename boost::mp11::mp_map_find<
-    TDispatcher, decltype(TEvent())
+    TDispatcher, decltype(Event)
   >::second_type;
 
-  dispatch_t::on(TEvent());
+  dispatch_t::on(Event);
 ```
 <!-- .element: class="fragment" data-fragment-index="4" -->
 
@@ -656,13 +670,13 @@ template<class TDispatcher, auto TEvent>
 
 ----
 
-### Dispatch / Read–eval–print loop (REPL)
+### Compile-time dispatch
 
-<pre><code>dispatch< make_dispatcher(dispatcher), "[]{ return e1{}; }" >()</code> -> <font color="lime">foo</font></pre>
+<pre><code>dispatch< make_dispatcher(mappings), "e1{}" >()</code> -> <font color="lime">foo</font></pre>
 <!-- .element: class="fragment" -->
 
 ```cpp
-main:
+dispatch:
         pushq   %rax
         movl    $.L.str, %edi
         callq   puts
@@ -674,14 +688,14 @@ main:
 ```
 <!-- .element: class="fragment" -->
 
-<pre><code>dispatch< make_dispatcher(dispatcher), "[]{ return e2{}; }" >()</code> -> <font color="lime">bar</font></pre>
+<pre><code>dispatch< make_dispatcher(mappings), "e2{}" >()</code> -> <font color="lime">bar</font></pre>
 <!-- .element: class="fragment" -->
 
 ----
 
-### Dispatch / Read–eval–print loop (REPL)
+### Compile-time dispatch
 
-<pre><code>dispatch< make_dispatcher(dispatcher), "[]{ return e3{}; }" >()</code> // <font color="gray">run-time compilation error</font><br/> -> <font color="salmon">error: type 'mp_map_find<
+<pre><code>dispatch< make_dispatcher(mappings), "e3{}" >()</code> // <font color="gray">run-time compilation error</font><br/> -> <font color="salmon">error: type 'mp_map_find<
                    boost::mp11::mp_list<
                      std::pair< e2, bar >,
                      std::pair< e1, foo >
@@ -691,64 +705,107 @@ main:
     cannot be used prior to '::' because it has no members</font></pre>
 <!-- .element: class="fragment" -->
 
-<pre><code>dispatch< make_dispatcher(dispatcher), "[]{ return e4{}; }" >()</code> // <font color="gray">run-time compilation error</font><br/> -> <font color="salmon">error: use of undeclared identifier 'e4'</font></pre>
+<pre><code>dispatch< make_dispatcher(mappings), "e4{}" >()</code> // <font color="gray">run-time compilation error</font><br/> -> <font color="salmon">error: use of undeclared identifier 'e4'</font></pre>
 <!-- .element: class="fragment" -->
 
 ----
 
-### Save library/binary
+### Run-time dispatch
 
 ```cpp
-template<auto Expr>
+// Events with ids
+struct e1 { static constexpr auto id = 1; };
+struct e2 { static constexpr auto id = 2; };
+struct e3 { static constexpr auto id = 3; };
+```
+<!-- .element: class="fragment"-->
+
+constexpr auto make_dispatcher(const auto& mappings) {
 ```
 <!-- .element: class="fragment" data-fragment-index="1" -->
 
 ```cpp
-[[clang::jit("CXXFLAGS=-O3, out=run.ir")]
-auto run(bool execute) -> void {
+  return R"([](auto id) {
+    switch(id) { default: assert(false); break;)" +
+      join(mappings, [](const auto& mapping) {
+        const auto [ event, handler ] = mapping;
+        return "case " + event + "::id:" + handler + "::on(" + event + "{}); break;";
+      }, "") +
+    "}};";
 ```
 <!-- .element: class="fragment" data-fragment-index="2" -->
 
 ```cpp
-  if (execute) {
-    Expr();
-  } // otherwise only instantiate
+}
+```
+
+----
+
+### Run-time dispatch
+
+```cpp
+template<auto Dispatch>
+[[clang::jit]] auto dispatch(auto id) -> void {
+  Dispatch(id);
+}
 ```
 <!-- .element: class="fragment" data-fragment-index="3" -->
 
-```cpp
-}
-```
-<!-- .element: class="fragment" data-fragment-index="1" -->
-
----
-
-```cpp
-run<"[]{ std::cout << 42; }">(true); // produces run.ir*
-```
+<pre><code>dispatch< make_dispatcher(mappings) >(1)</code> -> <font color="lime">foo</font></pre>
 <!-- .element: class="fragment" data-fragment-index="4" -->
 
-```cpp
-run<"[]{ std::cout << 42; }">(false); // produces run.ir without
-                                      // running the expression
-```
+<pre><code>dispatch< make_dispatcher(mappings) >(2)</code> -> <font color="lime">bar</font></pre>
 <!-- .element: class="fragment" data-fragment-index="5" -->
 
-#### * Intermediate representation (IR)
-<!-- .element: class="fragment" data-fragment-index="4" -->
+<pre><code>dispatch< make_dispatcher(mappings) >(0)</code> -> <font color="salmon">Assertion `false' failed</font></pre>
+<!-- .element: class="fragment" data-fragment-index="6" -->
 
 ----
 
 ### Save library/binary
 
 ```cpp
-auto run(bool) -> void;
+template<auto Dispatch>
+[[clang::jit(R"(CXXFLAGS="-O3", out="dispatch.ir")")]
+```
+<!-- .element: class="fragment" data-fragment-index="1" -->
+
+```cpp
+auto dispatch(auto id) -> void {
+  Dispatch(id);
+}
+```
+<!-- .element: class="fragment" data-fragment-index="2" -->
+
+---
+
+<pre><code>dispatch< make_dispatcher(mappings) >(1)</code> -> <font color="lime">foo</font></pre>
+// produces run.ir*
+<!-- .element: class="fragment" data-fragment-index="4" -->
+
+#### * Intermediate representation (IR)
+<!-- .element: class="fragment" data-fragment-index="4" -->
+
+---
+
+### Save library/binary
+
+void(&dispatch< make_dispatcher(mappings) >); // produces dipatch.ir without
+                                              // running the expression
+                                              // just by instantiation
+
+----
+
+### Save library/binary
+
+```cpp
+auto dispatch(int) -> void; // templates are in IR (removed from the mangled symbol)
 ```
 <!-- .element: class="fragment" -->
 
 ```cpp
-int main() {
-  run(true); // templates are in IR (removed from the mangled symbol)
+int main(int argc, const char** argv) {
+  dispatch(std::stoi(argv[1]));
 }
 ```
 <!-- .element: class="fragment" -->
@@ -756,24 +813,64 @@ int main() {
 ---
 
 ```sh
-llc -filetype=obj run.ir -o run.o # IR to an object file
+llc -filetype=obj dispatch.ir -o dispatch.o # IR to an object file
 ```
 <!-- .element: class="fragment" -->
 
 ```sh
-clang++ run.o main.cpp -o binary  # no -fjit required
+clang++ dispatch.o main.cpp -o dispatch # no -fjit required
 ```
 <!-- .element: class="fragment" -->
 
-<pre><code>./binary</code> -> <font color="lime">42</font></pre>
+<pre><code>ls -lh dispatch</code> -> <font color="white">1.3M # compiler is not included</font></pre>
+<!-- .element: class="fragment" -->
+
+<pre><code>nm dispatch | grep dispatch</code> -> <font color="white">_Z3dispatchi</font></pre>
+<!-- .element: class="fragment" -->
+
+----
+
+```cpp
+main:
+        push    rax
+        mov     eax, edi
+        mov     edi, offset .L.str.2
+        cmp     eax, 1
+        je      .LBB0_3
+        cmp     eax, 2
+        jne     .LBB0_4
+        mov     edi, offset .L.str.3
+.LBB0_3: # foo
+        call    puts
+        xor     eax, eax
+        pop     rcx
+        ret
+.LBB0_4:
+        mov     ecx, offset .L._Z8dispatchIiEDaT_
+        mov     edx, 14
+        call    __assert_fail
+
+.L._Z8dispatchIiEDaT_:
+        .asciz  "auto dispatch(auto) [id:auto = int]"
+
+.L.str.2:
+        .asciz  "foo"
+
+.L.str.3:
+        .asciz  "bar"
+
+```
 <!-- .element: class="fragment" -->
 
 ---
 
-<pre><code>ls -lh binary</code> -> <font color="white">1.3M # compiler is not included</font></pre>
+<pre><code>./dispatch 1</code> -> <font color="lime">foo</font></pre>
 <!-- .element: class="fragment" -->
 
-<pre><code>nm binary | grep run</code> -> <font color="white">_Z3runb</font></pre>
+<pre><code>./dispatch 2</code> -> <font color="lime">bar</font></pre>
+<!-- .element: class="fragment" -->
+
+<pre><code>./dispatch 0</code> -> <font color="salmon">Assertion `false' failed</font></pre>
 <!-- .element: class="fragment" -->
 
 ----
@@ -844,17 +941,9 @@ We can use JIT to check that the type satisfies the concept.
 ```cpp
 auto check(const std::string& concept_name,
            const std::string& type) {
-  try {
-    auto t = "[]{ using T = " + type
-               + "return T{};"
-             + "}()";
-    jit<"decltype("s
-        + "[](" + concept_name + " auto){}(" + t + ")"
-      + ")">();
-    return true;
-  } catch(const clang_compile_error&) {
-    return false;
-  }
+  return compiles<"decltype("s
+    + "[](" + concept_name + " auto){}(" + t + ")"
+    + ")">();
 }
 ```
 <!-- .element: class="fragment" -->
@@ -939,8 +1028,6 @@ Breaking down the walls of the compiler & linker.
 
 Notes:
 
-
-
 ==============================================================================
 
 ## Summary
@@ -970,6 +1057,16 @@ Notes:
 ----
 
 ### Future?
+
+what if
+<!-- .element: class="fragment" data-fragment-index="0" -->
+
+<pre><code>[[clang::jit]]</code> -> <font color="lime">run-time</font></pre>
+<!-- .element: class="fragment" data-fragment-index="3" -->
+
+```cpp
+[[clang::jit
+```
 
 ```cpp
 [[clang::jit]]           // run-time
