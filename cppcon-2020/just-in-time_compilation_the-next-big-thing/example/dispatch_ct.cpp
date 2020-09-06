@@ -1,6 +1,7 @@
 #include <cstdio>
 #include <string>
 #include <unordered_map>
+#include <boost/mp11/algorithm.hpp>
 
 struct foo { static constexpr auto on(auto event) { std::puts("foo"); } };
 struct bar { static constexpr auto on(auto event) { std::puts("bar"); } };

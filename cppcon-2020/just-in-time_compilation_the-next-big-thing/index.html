@@ -478,19 +478,29 @@ template<auto TExpr> [[clang::jit]] auto meta_assert() -> void {
 
 ### Read–eval–print loop (REPL)
 
-std::vector<std::string> vs;
+```cpp
+std::vector<std::string> v{};
+```
+<!-- .element: class="fragment" -->
 
 ```cpp
-vs.push_back("int");
+v.push_back("int");
 ```
+<!-- .element: class="fragment" -->
 
 ```cpp
-vs.push_back("double");
+v.push_back("double");
 ```
+<!-- .element: class="fragment" -->
+
+---
 
 ```cpp
-meta_assert("[]{ return std::is_same_v<std::tuple<int, double>, " + vs | transform()...);
+meta_assert("[]{ return std::is_same_v<std::tuple<int, double>" +
+  "std::tuple<" + join(v, [](const auto& e) { return e; }), ',') +
+">>; }");
 ```
+<!-- .element: class="fragment" -->
 
 ----
 
@@ -510,24 +520,35 @@ meta_assert("[]{ return std::is_same_v<std::tuple<int, double>, " + vs | transfo
 ### C++ as a scripting language
 
 ```cpp
-int main(int argc, char* argv[]) {
-  auto file_contents = [&] {
-    std::ifstream f(argv[1]);
+int main(int argc, const char** argv) {
+```
+<!-- .element: class="fragment" data-fragment-index="1" -->
+
+```cpp
+  const auto file_contents = [&] {
+    std::ifstream f{argv[1]};
     f.ignore(std::numeric_limits<std::streamsize>::max(),
              f.widen('\n'));
     return std::string{std::istreambuf_iterator<char>{f},
                        std::istreambuf_iterator<char>{}};
   }();
-  run<"decltype([] {" + file_contents + "})">();
+```
+<!-- .element: class="fragment" data-fragment-index="2" -->
+
+```cpp
+  jit<"[] {" + file_contents + '}'>();
+```
+<!-- .element: class="fragment" data-fragment-index="3" -->
+
+```cpp
 }
 ```
-<!-- .element: class="fragment" -->
+<!-- .element: class="fragment" data-fragment-index="1" -->
 
 ---
 
 ```bash
 #!/usr/bin/c++-jit
-
 std::cout << "Hello, world!\n";
 ```
 <!-- .element: class="fragment" -->
@@ -543,26 +564,42 @@ Modules to the rescue?
 
 ----
 
-### Mix compile-time & run-time (1)
+### Mix compile-time & run-time
 
 ```cpp
-  template <auto... Ns>
-  auto sort = [](auto... ns) -> std::string {
-    // combine & sort CT & RT values
-    using T = std::common_type_t<decltype(Ns)..., decltype(ns)...>;
-    std::vector<T> v{Ns..., ns...};
-    std::sort(std::begin(v), std::end(v));
-
-    // return comma-separated string (=> NTTP parameter pack)
-    std::stringstream sorted{};
-    std::copy(std::begin(v), std::end(v),
-              std::make_ostream_joiner(sorted, ","));
-    return sorted.str();
-  };
+template <auto... Ns> auto sort(auto... ns) -> std::string {
 ```
-<!-- .element: class="fragment" -->
+<!-- .element: class="fragment" data-fragment-index="1" -->
+
+```cpp
+  std::vector v{Ns..., ns...};
+  std::sort(std::begin(v), std::end(v));
+```
+<!-- .element: class="fragment" data-fragment-index="2" -->
+
+```cpp
+  return "std::array<" +
+    join([](const auto& e) { return std::to_string(e); }, ",") +
+  '>';
+```
+<!-- .element: class="fragment" data-fragment-index="3" -->
+
+```cpp
+}
+```
+<!-- .element: class="fragment" data-fragment-index="1" -->
+
+---
+
+```cpp
+meta_assert<"[] { return " +
+  sort<1, 9, 3>(4, 2, 7) + " == std::array{1, 2, 3, 4, 7, 9}; }";
+>();
+```
+<!-- .element: class="fragment" data-fragment-index="4" -->
 
 Notes:
+
 Here is a sort function that takes some of its parameters as NTTPs, and the rest
 as runtime values.
 
@@ -572,20 +609,6 @@ We're using a `vector` here but we could also use an `array` of `T`s with
 Or the runtime argument could be an `array` or `vector` of values perhaps.
 
 The return value is a `string` that we'll use as a parameter for a JIT function.
-
-----
-
-### Mix compile-time & run-time (2)
-
-```cpp
-meta_assert<"[] { return " +
-  sort<1, 9, 3>(4, 2, 7)+ " == " +
-  std::array{1, 2, 3, 4, 7, 9};
-}">();
-```
-<!-- .element: class="fragment" -->
-
-Notes:
 
 Here is the JIT function template. We pass in the result of `sort` i.e. the
 comma-separated string of sorted values.
@@ -615,7 +638,7 @@ struct e3 {};
 
 ```cpp
 // Mappings
-std::unordered_map<std::string, std::string> mapping = {
+std::unordered_map<std::string, std::string> mappings = {
   { "e1", "foo" },
   { "e2", "bar" }
 };
@@ -655,11 +678,9 @@ template<class TDispatcher, auto Event>
 <!-- .element: class="fragment" data-fragment-index="3" -->
 
 ```cpp
-  using dispatch_t = typename boost::mp11::mp_map_find<
+  boost::mp11::mp_map_find<
     TDispatcher, decltype(Event)
-  >::second_type;
-
-  dispatch_t::on(Event);
+  >::on(Event);
 ```
 <!-- .element: class="fragment" data-fragment-index="4" -->
 
@@ -675,17 +696,7 @@ template<class TDispatcher, auto Event>
 <pre><code>dispatch< make_dispatcher(mappings), "e1{}" >()</code> -> <font color="lime">foo</font></pre>
 <!-- .element: class="fragment" -->
 
-```cpp
-dispatch:
-        pushq   %rax
-        movl    $.L.str, %edi
-        callq   puts
-        xorl    %eax, %eax
-        popq    %rcx
-        retq
-.L.str:
-        .asciz  "foo"
-```
+<img src="images/asm_dispatch.png" style="width: 35%; background:none; border:none; box-shadow:none;" />
 <!-- .element: class="fragment" -->
 
 <pre><code>dispatch< make_dispatcher(mappings), "e2{}" >()</code> -> <font color="lime">bar</font></pre>
@@ -718,26 +729,31 @@ struct e1 { static constexpr auto id = 1; };
 struct e2 { static constexpr auto id = 2; };
 struct e3 { static constexpr auto id = 3; };
 ```
-<!-- .element: class="fragment"-->
+<!-- .element: class="fragment" data-fragment-index="1" -->
 
+---
+
+```cpp
 constexpr auto make_dispatcher(const auto& mappings) {
 ```
-<!-- .element: class="fragment" data-fragment-index="1" -->
+<!-- .element: class="fragment" data-fragment-index="2" -->
 
 ```cpp
   return R"([](auto id) {
     switch(id) { default: assert(false); break;)" +
       join(mappings, [](const auto& mapping) {
         const auto [ event, handler ] = mapping;
-        return "case " + event + "::id:" + handler + "::on(" + event + "{}); break;";
-      }, "") +
+        return "case " + event + "::id:" + handler +
+          "::on(" + event + "{}); break;";
+      }) +
     "}};";
 ```
-<!-- .element: class="fragment" data-fragment-index="2" -->
+<!-- .element: class="fragment" data-fragment-index="3" -->
 
 ```cpp
 }
 ```
+<!-- .element: class="fragment" data-fragment-index="2" -->
 
 ----
 
@@ -750,6 +766,8 @@ template<auto Dispatch>
 }
 ```
 <!-- .element: class="fragment" data-fragment-index="3" -->
+
+---
 
 <pre><code>dispatch< make_dispatcher(mappings) >(1)</code> -> <font color="lime">foo</font></pre>
 <!-- .element: class="fragment" data-fragment-index="4" -->
@@ -766,7 +784,7 @@ template<auto Dispatch>
 
 ```cpp
 template<auto Dispatch>
-[[clang::jit(R"(CXXFLAGS="-O3", out="dispatch.ir")")]
+[[clang::jit(R"(CXXFLAGS="-O3 -DNDEBUG", out="dispatch.ir")")]
 ```
 <!-- .element: class="fragment" data-fragment-index="1" -->
 
@@ -779,28 +797,21 @@ auto dispatch(auto id) -> void {
 
 ---
 
-<pre><code>dispatch< make_dispatcher(mappings) >(1)</code> -> <font color="lime">foo</font></pre>
-// produces run.ir*
+<pre><code>dispatch< make_dispatcher(mappings) >(1)</code> // Runs dispatch and produces dispatch.ir*</font><br/> -> <font color="lime">foo</font></pre>
+<!-- .element: class="fragment" data-fragment-index="3" -->
+
+<pre><code>void(&dispatch< make_dispatcher(mappings) >)</code> // Produces dispatch.ir* without running dispatch</font></pre>
 <!-- .element: class="fragment" data-fragment-index="4" -->
 
-#### * Intermediate representation (IR)
-<!-- .element: class="fragment" data-fragment-index="4" -->
+##### * Intermediate representation (IR)
+<!-- .element: class="fragment" data-fragment-index="3" -->
 
----
-
-### Save library/binary
-
-void(&dispatch< make_dispatcher(mappings) >); // produces dipatch.ir without
-                                              // running the expression
-                                              // just by instantiation
 
 ----
 
 ### Save library/binary
 
-```cpp
-auto dispatch(int) -> void; // templates are in IR (removed from the mangled symbol)
-```
+<pre><code>auto dispatch(int) -> void;</code>// No templates in the mangled symbol</font></pre>
 <!-- .element: class="fragment" -->
 
 ```cpp
@@ -830,41 +841,12 @@ clang++ dispatch.o main.cpp -o dispatch # no -fjit required
 
 ----
 
-```cpp
-main:
-        push    rax
-        mov     eax, edi
-        mov     edi, offset .L.str.2
-        cmp     eax, 1
-        je      .LBB0_3
-        cmp     eax, 2
-        jne     .LBB0_4
-        mov     edi, offset .L.str.3
-.LBB0_3: # foo
-        call    puts
-        xor     eax, eax
-        pop     rcx
-        ret
-.LBB0_4:
-        mov     ecx, offset .L._Z8dispatchIiEDaT_
-        mov     edx, 14
-        call    __assert_fail
-
-.L._Z8dispatchIiEDaT_:
-        .asciz  "auto dispatch(auto) [id:auto = int]"
-
-.L.str.2:
-        .asciz  "foo"
-
-.L.str.3:
-        .asciz  "bar"
-
-```
-<!-- .element: class="fragment" -->
-
----
+### Save library/binary
 
 <pre><code>./dispatch 1</code> -> <font color="lime">foo</font></pre>
+<!-- .element: class="fragment" -->
+
+<img src="images/asm_binary.png" style="width: 35%; background:none; border:none; box-shadow:none;" />
 <!-- .element: class="fragment" -->
 
 <pre><code>./dispatch 2</code> -> <font color="lime">bar</font></pre>
@@ -895,8 +877,7 @@ SELECT * FROM Users WHERE Name ="" or ""="" AND Pass ="" or ""=""
 
 ```cpp
 int main() {
-  jit<"decltype([] {
-    std::cout << \""s + std::getenv("USER") + "\"; })"s>();
+  jit<"[]{ std::cout << \""s + std::getenv("USER") + "\"; }"s>();
 }
 ```
 <!-- .element: class="fragment" -->
@@ -1058,29 +1039,13 @@ Notes:
 
 ### Future?
 
-what if
-<!-- .element: class="fragment" data-fragment-index="0" -->
-
-<pre><code>[[clang::jit]]</code> -> <font color="lime">run-time</font></pre>
+<pre><code>template< class T > [[clang::jit]] auto future();</code> -> <font color="lime">Run-time</font></pre>
 <!-- .element: class="fragment" data-fragment-index="3" -->
 
-```cpp
-[[clang::jit
-```
-
-```cpp
-[[clang::jit]]           // run-time
-```
+<pre><code>template< class T > [[clang::jit]] constexpr auto future();</code> -> <font color="lime">Run/Compile-time</font></pre>
 <!-- .element: class="fragment" -->
 
-```cpp
-consteval [[clang::jit]] // compile-time
-```
-<!-- .element: class="fragment" -->
-
-```cpp
-constexpr [[clang::jit]] // compile/run-time
-```
+<pre><code>template< class T > [[clang::jit]] consteval auto future();</code> -> <font color="lime">Compile-time</font></pre>
 <!-- .element: class="fragment" -->
 
 ----
@@ -1123,7 +1088,7 @@ JIT workflow supports. And it can be recursive.
 * #### (?) Cross compilation?
 <!-- .element: class="fragment" -->
 
-----
+==============================================================================
 
 ### Let's `JIT` all the things?!
 ### Questions?
