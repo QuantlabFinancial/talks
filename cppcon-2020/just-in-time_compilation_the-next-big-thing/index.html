@@ -922,16 +922,17 @@ int main() {
 ### JIT + concepts
 
 ```cpp
-template <typename T>
-concept readable_io = requires(T t, char *buf, std::size_t maxlen) {
-  { t.read(buf, maxlen) } -> std::same_as<std::size_t>;
-};
+template <class TIO>
+concept readable_io =
+  requires(TIO& io, std::byte* buffer, std::size_t size) {
+    { io.read(buffer, size) } -> std::same_as<std::size_t>;
+  };
 ```
 <!-- .element: class="fragment" -->
 
 ```cpp
-struct MyReadableIO {
-  std::size_t read(char* buf, std::size_t maxlen) -> std::size_t;
+struct my_readable_io {
+  auto read(std::byte* buffer, std::size_t size) -> std::size_t;
 };
 ```
 <!-- .element: class="fragment" -->
@@ -940,8 +941,10 @@ struct MyReadableIO {
 
 ```cpp
 auto check(const std::string& concept_name,
-           const std::string& type) {
-  return compiles<"[](" + concept_name + " auto){}(" + type + "{})">();
+           const std::string& type) -> bool {
+  return compiles<
+    "[](" + concept_name + " auto){}(" + type + "{})"
+  >();
 }
 ```
 <!-- .element: class="fragment" -->
