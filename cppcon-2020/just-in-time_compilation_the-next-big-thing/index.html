@@ -91,11 +91,14 @@ Introductions:
 
 ### What is JITting?
 
-Instead of Ahead-of-Time (AOT), aka "the norm":
+* #### Instead of Ahead-of-Time (AOT), aka "the norm": It's like the application (/library) is the compiler...
+<!-- .element: class="fragment" -->
 
-Just-in-Time (JIT) is compilation at the point of need.
+* #### Just-in-Time (JIT) is compilation at the point of need.
+<!-- .element: class="fragment" -->
 
-It's like the application (/library) is the compiler...
+* #### It's like the application (/library) is the compiler...
+<!-- .element: class="fragment" -->
 
 Notes:
 If you've seen JF's talk this is probably familiar
@@ -104,17 +107,19 @@ If you've seen JF's talk this is probably familiar
 
 ### Why JIT-compile?
 
-One or more of these reasons:
+* #### AOT is not possible
+<!-- .element: class="fragment" -->
 
-* AOT is not possible
+* #### AOT is not desirable
 <!-- .element: class="fragment" -->
-* AOT is not desirable
+
+* #### JIT gives perf benefits
 <!-- .element: class="fragment" -->
-* JIT gives perf benefits
+
+* #### JIT gives productivity benefits
 <!-- .element: class="fragment" -->
-* JIT gives productivity benefits
-<!-- .element: class="fragment" -->
-* JIT allows different workflows/use cases
+
+* #### JIT allows different workflows/use cases
 <!-- .element: class="fragment" -->
 
 Notes:
@@ -123,11 +128,13 @@ Notes:
 
 ### Sometimes AOT is not possible/desirable
 
-* If I don't have the AOT source, obviously I can't compile it.
+* #### If I don't have the AOT source, obviously I can't compile it
 <!-- .element: class="fragment" -->
-* If I don't have the parameters that will constrain the code at runtime, I can't tailor the code to them.
+
+* #### If I don't have the parameters that will constrain the code at runtime, I can't tailor the code to them
 <!-- .element: class="fragment" -->
-* AOT might lock me into an ABI.
+
+* #### AOT might lock me into an ABI
 <!-- .element: class="fragment" -->
 
 Notes:
@@ -142,11 +149,13 @@ template. But maybe these arguments are only available at runtime.
 
 ### Sometimes JIT gives performance benefits
 
-* If I don't know where the source is going to be run, I can't AOT-compile with the best architecture flags.
+* #### If I don't know where the source is going to be run, I can't AOT-compile with the best architecture flags.
 <!-- .element: class="fragment" -->
-* I might not be running the code on just one architecture.
+
+* #### I might not be running the code on just one architecture.
 <!-- .element: class="fragment" -->
-* In order to get the best possible optimization, I need the best possible information about all of the code.
+
+* #### In order to get the best possible optimization, I need the best possible information about all of the code.
 <!-- .element: class="fragment" -->
 
 Notes:
@@ -161,9 +170,10 @@ If we can reduce the amount of binary maintenance, that's probably good.
 
 ### Sometimes JIT is more productive
 
-* I can trade AOT-compilation time (developer time) against JIT-compilation time (user time).
+* #### I can trade AOT-compilation time (developer time) against JIT-compilation time (user time).
 <!-- .element: class="fragment" -->
-* With JIT, I can compile just what is needed rather than accounting for all possible use cases.
+
+* #### With JIT, I can compile just what is needed rather than accounting for all possible use cases.
 <!-- .element: class="fragment" -->
 
 Notes:
@@ -181,8 +191,11 @@ And by compiling just what we need we can avoid unnecessary work.
 
 ### JIT allows different use cases
 
-* "OK, so I can compile code at point of need. So what?"
-* It's just the tip of the iceberg, as we shall see...
+* #### "OK, so I can compile code at point of need. So what?"
+<!-- .element: class="fragment" -->
+
+* #### It's just the tip of the iceberg, as we shall see...
+<!-- .element: class="fragment" -->
 
 Notes:
 
@@ -846,7 +859,7 @@ clang++ dispatch.o main.cpp -o dispatch # no -fjit required
 <pre><code>./dispatch 1</code> -> <font color="lime">foo</font></pre>
 <!-- .element: class="fragment" -->
 
-<img src="images/asm_binary.png" style="width: 35%; background:none; border:none; box-shadow:none;" />
+<img src="images/asm_binary.png" style="width: 32%; background:none; border:none; box-shadow:none;" />
 <!-- .element: class="fragment" -->
 
 <pre><code>./dispatch 2</code> -> <font color="lime">bar</font></pre>
@@ -907,17 +920,7 @@ struct MyReadableIO {
 ```
 <!-- .element: class="fragment" -->
 
-Notes:
-
-Here we have a concept. Not a very good concept, but a concept nevertheless.
-
-And here we have a type that satisfies the concept.
-
-We can use JIT to check that the type satisfies the concept.
-
-----
-
-### JIT + concepts
+---
 
 ```cpp
 auto check(const std::string& concept_name,
@@ -933,6 +936,12 @@ Notes:
 
 We can check the concept at the point where we "load" the user code, without
 incurring the full cost of compilation, and we can give them a nice error.
+
+Here we have a concept. Not a very good concept, but a concept nevertheless.
+
+And here we have a type that satisfies the concept.
+
+We can use JIT to check that the type satisfies the concept.
 
 ----
 
@@ -996,7 +1005,9 @@ Notes:
 
 ### JITting user code? Why not JIT dev code?
 
-Breaking down the walls of the compiler & linker.
+----
+
+### Breaking down the walls of the compiler & linker
 
 * #### (+) Incremental compilation on a running system
 <!-- .element: class="fragment" -->
@@ -1050,13 +1061,13 @@ Notes:
 
 ----
 
-### JIT in the compiler
+### JIT in the compiler / Speculation
 
-(Speculation)
-
-Compilation is ~becoming~ quite complicated.
+> Compilation is ~becoming~ quite complicated
+<!-- .element: class="fragment" -->
 
 [P0992: Translation and Evaluation](https://wg21.link/p0992)
+<!-- .element: class="fragment" -->
 
 Notes:
 
