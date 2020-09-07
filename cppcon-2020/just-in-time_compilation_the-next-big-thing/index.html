@@ -94,7 +94,7 @@ Introductions:
 * #### Instead of Ahead-of-Time (AOT), aka "the norm": It's like the application (/library) is the compiler...
 <!-- .element: class="fragment" -->
 
-* #### Just-in-Time (JIT) is compilation at the point of need.
+* #### Just-in-Time (JIT) is compilation at the point of need
 <!-- .element: class="fragment" -->
 
 * #### It's like the application (/library) is the compiler...
@@ -149,13 +149,13 @@ template. But maybe these arguments are only available at runtime.
 
 ### Sometimes JIT gives performance benefits
 
-* #### If I don't know where the source is going to be run, I can't AOT-compile with the best architecture flags.
+* #### If I don't know where the source is going to be run, I can't AOT-compile with the best architecture flags
 <!-- .element: class="fragment" -->
 
-* #### I might not be running the code on just one architecture.
+* #### I might not be running the code on just one architecture
 <!-- .element: class="fragment" -->
 
-* #### In order to get the best possible optimization, I need the best possible information about all of the code.
+* #### In order to get the best possible optimization, I need the best possible information about all of the code
 <!-- .element: class="fragment" -->
 
 Notes:
@@ -170,10 +170,10 @@ If we can reduce the amount of binary maintenance, that's probably good.
 
 ### Sometimes JIT is more productive
 
-* #### I can trade AOT-compilation time (developer time) against JIT-compilation time (user time).
+* #### I can trade AOT-compilation time (developer time) against JIT-compilation time (user time)
 <!-- .element: class="fragment" -->
 
-* #### With JIT, I can compile just what is needed rather than accounting for all possible use cases.
+* #### With JIT, I can compile just what is needed rather than accounting for all possible use cases
 <!-- .element: class="fragment" -->
 
 Notes:
@@ -230,20 +230,36 @@ like adopting version control.
 ---
 
 ##### * With custom modifications
-<!-- .element: class="fragment" data-fragment-index="4" -->
+<!-- .element: align="left" class="fragment" data-fragment-index="4" -->
 
 ##### ** Compile-time
-<!-- .element: class="fragment" data-fragment-index="5" -->
+<!-- .element: align="left" class="fragment" data-fragment-index="5" -->
 
 ----
 
-### Cling vs [[clang::jit]]
+#### [Cling](https://github.com/root-project/cling)
 
-* `Cling` is primarily a Read–eval–print loop (REPL) and always JIT compiles the whole program with minimal optimization
-<!-- .element: class="fragment" -->
+#### * Primary a Read–eval–print loop (REPL)
+<!-- .element: align="left" class="fragment" data-fragment-index="1" -->
 
-* `[[clang::jit]]` is a C++ language extension to allow JIT compilation of specifically-annotated functions with user-supplied run-time constants for maximal optimizations not even possible at build time
-<!-- .element: class="fragment" -->
+#### * Always JIT compiles the whole program
+<!-- .element: align="left" class="fragment" data-fragment-index="2" -->
+
+#### * Minimal optimizations
+<!-- .element: align="left" class="fragment" data-fragment-index="3" -->
+
+---
+
+#### [\[\[clang::jit\]\]](https://github.com/hfinkel/llvm-project-cxxjit)
+
+#### * C++ language extension (Attribute)
+<!-- .element: align="left" class="fragment" data-fragment-index="1" -->
+
+#### * Allow JIT compilation of specifically-annotated functions
+<!-- .element: align="left" class="fragment" data-fragment-index="2" -->
+
+#### * Maximal optimizations not even possible at build time
+<!-- .element: align="left" class="fragment" data-fragment-index="3" -->
 
 ----
 
@@ -1100,6 +1116,10 @@ JIT workflow supports. And it can be recursive.
 <!-- .element: class="fragment" -->
 
 ==============================================================================
+
+<a href="https://www.quantlab.com"><img src="images/quantlab-logo.svg" style="width: 35%; background:none; border:none; box-shadow:none;" /></a>
+
+---
 
 ### Let's `JIT` all the things?!
 ### Questions?
