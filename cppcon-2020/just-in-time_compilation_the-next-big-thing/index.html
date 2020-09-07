@@ -435,7 +435,7 @@ template<auto Expr>
 
 ```cpp
 template<auto Expr>
-[[clang::jit]] auto compiles() -> expected<clang_compile_error> {
+[[clang::jit]] auto jit_compiles() -> expected<clang_compile_error> {
 ```
 <!-- .element: class="fragment" data-fragment-index="1" -->
 
@@ -456,15 +456,15 @@ template<auto Expr>
 
 ---
 
-<pre><code>assert(compiles<"[]{}">())</code> -> <font color="lime">👍</font></pre>
+<pre><code>assert(jit_compiles<"[]{}">())</code> -> <font color="lime">👍</font></pre>
 <!-- .element: class="fragment" data-fragment-index="3" -->
 
-<pre><code>assert(compiles<"[}">())</code> -> <font color="salmon">Assertion `compiles<"[}">()' failed</font></pre>
+<pre><code>assert(jit_compiles<"[}">())</code> -> <font color="salmon">Assertion `compiles<"[}">()' failed</font></pre>
 <!-- .element: class="fragment" data-fragment-index="4" -->
 
 ----
 
-### Utilities / Meta
+### Utilities / Meta / Assert
 
 ```cpp
 using meta = std::string; // in the reflection proposal
@@ -491,16 +491,16 @@ template<auto N> auto make_meta(auto n) -> meta {
 ---
 
 ```cpp
-template<auto TExpr> [[clang::jit]] auto meta_assert() -> void {
+template<auto TExpr> [[clang::jit]] auto jit_assert() -> void {
   static_assert(TExpr());
 }
 ```
 <!-- .element: class="fragment" data-fragment-index="4" -->
 
-<pre><code>meta_assert<"[]{ return 42 == " + make_meta<40>(2) + "{}; }">()</code> -> <font color="lime">👍</font></pre>
+<pre><code>jit_assert<"[]{ return 42 == " + make_meta<40>(2) + "{}; }">()</code> -> <font color="lime">👍</font></pre>
 <!-- .element: class="fragment" data-fragment-index="5" -->
 
-<pre><code>meta_assert<"[]{ return 43 == " + make_meta<40>(2) + "{}; }">()</code> -> <font color="salmon">error: static assertion failed</font></pre>
+<pre><code>jit_assert<"[]{ return 43 == " + make_meta<40>(2) + "{}; }">()</code> -> <font color="salmon">error: static assertion failed</font></pre>
 <!-- .element: class="fragment" data-fragment-index="6" -->
 
 ----
@@ -525,11 +525,44 @@ v.push_back("double");
 ---
 
 ```cpp
-meta_assert("[]{ return std::is_same_v<std::tuple<int, double>" +
+jit_assert("[]{ return std::is_same_v<std::tuple<int, double>" +
   "std::tuple<" + join(v, [](const auto& e) { return e; }), ',') +
 ">>; }");
 ```
 <!-- .element: class="fragment" -->
+
+----
+
+### CPP Injection / Security breach
+
+```sql
+SELECT * FROM Users WHERE Name ="John Doe" AND Pass ="myPass"
+```
+<!-- .element: class="fragment" -->
+
+```sql
+-- ""="" is always TRUE
+SELECT * FROM Users WHERE Name ="" or ""="" AND Pass ="" or ""=""
+```
+<!-- .element: class="fragment" -->
+
+##### https://www.w3schools.com/sql/sql_injection.asp
+<!-- .element: class="fragment" -->
+
+---
+
+```cpp
+int main() {
+  jit<"[]{ std::cout << \""s + std::getenv("USER") + "\"; }"s>();
+}
+```
+<!-- .element: class="fragment" -->
+
+<pre><code>USER=John ./cpp_injection</code> -> <font color="lime">John</font></pre>
+<!-- .element: class="fragment" -->
+
+<pre><code>USER="\";std::system(\"rm -rf /\");\"" ./cpp_injection</code> // <font color="gray">[]{ std::cout << "";std::system("rm -rf /");""; }</font><br/> -> <font color="lime">🔓</font></pre>
+<!-- .element: class="fragment"-->
 
 ----
 
@@ -621,7 +654,7 @@ template <auto... Ns> auto sort(auto... ns) -> std::string {
 ---
 
 ```cpp
-meta_assert<"[]{ return " +
+jit_assert<"[]{ return " +
   sort<1, 9, 3>(4, 2, 7) + " == std::array{1, 2, 3, 4, 7, 9}; }";
 >();
 ```
@@ -886,39 +919,6 @@ clang++ dispatch.o main.cpp -o dispatch # no -fjit required
 
 ----
 
-### CPP Injection / Security breach
-
-```sql
-SELECT * FROM Users WHERE Name ="John Doe" AND Pass ="myPass"
-```
-<!-- .element: class="fragment" -->
-
-```sql
--- ""="" is always TRUE
-SELECT * FROM Users WHERE Name ="" or ""="" AND Pass ="" or ""=""
-```
-<!-- .element: class="fragment" -->
-
-##### https://www.w3schools.com/sql/sql_injection.asp
-<!-- .element: class="fragment" -->
-
----
-
-```cpp
-int main() {
-  jit<"[]{ std::cout << \""s + std::getenv("USER") + "\"; }"s>();
-}
-```
-<!-- .element: class="fragment" -->
-
-<pre><code>USER=John ./cpp_injection</code> -> <font color="lime">John</font></pre>
-<!-- .element: class="fragment" -->
-
-<pre><code>USER="\";std::system(\"rm -rf /\");\"" ./cpp_injection</code> // <font color="gray">[]{ std::cout << "";std::system("rm -rf /");""; }</font><br/> -> <font color="lime">🔓</font></pre>
-<!-- .element: class="fragment"-->
-
-----
-
 ### JIT + concepts
 
 ```cpp
@@ -942,7 +942,7 @@ struct my_readable_io {
 ```cpp
 auto check(const std::string& concept_name,
            const std::string& type) -> bool {
-  return compiles<
+  return jit_compiles<
     "[](" + concept_name + " auto){}(" + type + "{})"
   >();
 }
