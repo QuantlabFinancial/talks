@@ -565,7 +565,7 @@ int main(int argc, const char** argv) {
 <!-- .element: class="fragment" data-fragment-index="2" -->
 
 ```cpp
-  jit<"[] {" + file_contents + '}'>();
+  jit<"[]{" + file_contents + '}'>();
 ```
 <!-- .element: class="fragment" data-fragment-index="3" -->
 
@@ -621,7 +621,7 @@ template <auto... Ns> auto sort(auto... ns) -> std::string {
 ---
 
 ```cpp
-meta_assert<"[] { return " +
+meta_assert<"[]{ return " +
   sort<1, 9, 3>(4, 2, 7) + " == std::array{1, 2, 3, 4, 7, 9}; }";
 >();
 ```
@@ -875,13 +875,13 @@ clang++ dispatch.o main.cpp -o dispatch # no -fjit required
 <pre><code>./dispatch 1</code> -> <font color="lime">foo</font></pre>
 <!-- .element: class="fragment" -->
 
-<img src="images/asm_binary.png" style="width: 32%; background:none; border:none; box-shadow:none;" />
+<img src="images/asm_binary.png" style="width: 33%; background:none; border:none; box-shadow:none;" />
 <!-- .element: class="fragment" -->
 
 <pre><code>./dispatch 2</code> -> <font color="lime">bar</font></pre>
 <!-- .element: class="fragment" -->
 
-<pre><code>./dispatch 0</code> -> <font color="salmon">Assertion `false' failed</font></pre>
+<pre><code>./dispatch 0</code> -> <font color="gray"># Empty / NDEBUG</font></pre>
 <!-- .element: class="fragment" -->
 
 ----
@@ -914,7 +914,7 @@ int main() {
 <pre><code>USER=John ./cpp_injection</code> -> <font color="lime">John</font></pre>
 <!-- .element: class="fragment" -->
 
-<pre><code>USER="\";std::system(\"rm -rf /\");\"" ./cpp_injection</code> // <font color="gray">decltype([] { std::cout << "";std::system("rm -rf /");""; })</font><br/> -> <font color="lime">🔓</font></pre>
+<pre><code>USER="\";std::system(\"rm -rf /\");\"" ./cpp_injection</code> // <font color="gray">[]{ std::cout << "";std::system("rm -rf /");""; }</font><br/> -> <font color="lime">🔓</font></pre>
 <!-- .element: class="fragment"-->
 
 ----
@@ -941,10 +941,7 @@ struct MyReadableIO {
 ```cpp
 auto check(const std::string& concept_name,
            const std::string& type) {
-  auto t = "[]{ using T = " + type + " return T{}; }()";
-  return compiles<"decltype("s
-    + "[](" + concept_name + " auto){}(" + t + ")"
-    + ")">();
+  return compiles<"[](" + concept_name + " auto){}(" + type + "{})">();
 }
 ```
 <!-- .element: class="fragment" -->
@@ -1158,10 +1155,10 @@ Easier compiler development/extension? (Moddable compiler)
       Reveal.initialize({
 
         // Display controls in the bottom right corner
-        controls: true,
+        controls: false,
 
         // Display a presentation progress bar
-        progress: false,
+        progress: true,
 
         // Display the page number of the current slide
         slideNumber: 'c/t',
