@@ -941,6 +941,7 @@ struct MyReadableIO {
 ```cpp
 auto check(const std::string& concept_name,
            const std::string& type) {
+  auto t = "[]{ using T = " + type + " return T{}; }()";
   return compiles<"decltype("s
     + "[](" + concept_name + " auto){}(" + t + ")"
     + ")">();
@@ -1008,14 +1009,25 @@ template <class TUserIO>
 
 ```cpp
 template <class T>
-concept privileged = T:privilege_level == PrivilegeLevel::DEVELOPER;
+concept privileged = T::privilege_level == PrivilegeLevel::DEVELOPER;
 
 template <privileged TIO>
-auto do_privileged_io(TIO &io) { ... }
+auto do_privileged_operation(TIO &io) { ... }
 ```
 <!-- .element: class="fragment" -->
 
 Notes:
+
+Here we show how to mark a user-injected class with the appropriate
+privilege level.
+
+How to prevent user code from calling into privileged code? Inject dependencies
+to provide the API for users.
+
+In general it's hard to prevent this entirely though... ultimately user code is
+C++ so can circumvent most protection mechanisms you put in. You can do various
+things to make it harder, but the goal here is to provide a nice API & JIT-time
+errors rather than to completely protect.
 
 ----
 
@@ -1087,10 +1099,10 @@ Notes:
 
 Notes:
 
-Compilation is fast becoming a "big ball of mud" pattern that mixes translation
-with evaluation. In order to instantiate X, you need to evaluate Y, which mean
-you need to instantiate Z, etc. Regular SFINAE, expression SFINAE, concepts,
-etc, etc, etc.
+Compilation is fast becoming a monolithic pattern that mixes translation with
+evaluation. In order to instantiate X, you need to evaluate Y, which mean you
+need to instantiate Z, etc. Regular SFINAE, expression SFINAE, concepts, etc,
+etc, etc.
 
 Andrew Sutton wrote a paper in which he put forward a model for compilation that
 separates translation from evaluation. This is very much a mental model that a
@@ -1114,6 +1126,9 @@ JIT workflow supports. And it can be recursive.
 
 * #### (?) Cross compilation?
 <!-- .element: class="fragment" -->
+
+Notes:
+Easier compiler development/extension? (Moddable compiler)
 
 ==============================================================================
 
