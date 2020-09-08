@@ -1078,14 +1078,24 @@ Notes:
 
 ### Future?
 
-<pre><code>template< class T > [[clang::jit]] auto future();</code> -> <font color="lime">Run-time</font></pre>
+<pre><code>template< class T >
+[[clang::jit]] auto future();</code> <font color="black">Run-time</font><br/> -> <font color="white">auto jit = "int"s; future< jit >()</font></pre>
 <!-- .element: class="fragment" data-fragment-index="3" -->
 
-<pre><code>template< class T > [[clang::jit]] constexpr auto future();</code> -> <font color="lime">Run/Compile-time</font></pre>
-<!-- .element: class="fragment" -->
+<pre><code>template< class T >
+[[clang::jit]] constexpr auto future();</code> <font color="black">Run/Compile-time</font><br/> -> <font color="white">auto jit = "int"s; future< jit >()</font><br/> -> <font color="white">future<"int">()</font></pre>
+<!-- .element: class="fragment" data-fragment-index="4" -->
 
-<pre><code>template< class T > [[clang::jit]] consteval auto future();</code> -> <font color="lime">Compile-time</font></pre>
-<!-- .element: class="fragment" -->
+<pre><code>template< class T >
+[[clang::jit]] consteval auto future();</code> <font color="black">Compile-time</font><br/> -> <font color="white">future<"int">()</font></pre>
+<!-- .element: class="fragment" data-fragment-index="5" -->
+
+---
+
+```cpp
+ -> future<int>() // Valid in all cases
+```
+<!-- .element: class="fragment" data-fragment-index="6" -->
 
 ----
 
