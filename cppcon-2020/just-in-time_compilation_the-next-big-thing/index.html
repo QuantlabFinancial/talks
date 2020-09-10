@@ -302,7 +302,7 @@ template <class T>
 <!-- .element: class="fragment" data-fragment-index="1" -->
 
 ```cpp
-[[clang::jit]] // instantiation at run-time
+[[clang::jit]] // Instantiation at run-time
                // Point-Of-Instantiation (POI)
 ```
 <!-- .element: class="fragment" data-fragment-index="4" -->
@@ -319,8 +319,11 @@ auto jit() -> void {
 <pre><code>jit<​int>()   // type</code> -> <font color="lime">i</font></pre>
 <!-- .element: class="fragment" data-fragment-index="3" -->
 
-<pre><code>jit<​"int">() // string/type</code> -> <font color="lime">i</font></pre>
+<pre><code>jit<​"int">() // type-string</code> -> <font color="lime">i</font></pre>
 <!-- .element: class="fragment" data-fragment-index="5" -->
+
+<pre><code>auto type = "int"s; jit<​type>()</code> -> <font color="lime">i</font></pre>
+<!-- .element: class="fragment" data-fragment-index="6" -->
 
 ----
 
@@ -343,7 +346,7 @@ $CXX -fjit hello_world.cpp -o hello_world
 <pre><code>ls -lh hello_world</code> -> <font color="white">75M</font></pre>
 <!-- .element: class="fragment" data-fragment-index="3" -->
 
-##### Compiler is included in the binary and pre-compiled module of the host
+##### Compiler and the pre-compiled module of the host is included in the binary
 <!-- .element: class="fragment" data-fragment-index="4" -->
 
 ----
@@ -370,7 +373,7 @@ $CXX -fjit hello_world.cpp -o hello_world
 ```cpp
 template <class T>
 [[clang::jit]] auto jit() -> void {
-  T{}(); // invokes lambda expression
+  T{}(); // Invokes lambda expression
 }
 ```
 <!-- .element: class="fragment" data-fragment-index="1" -->
@@ -409,7 +412,7 @@ template <auto Expr>
 <!-- .element: class="fragment" data-fragment-index="2" -->
 
 ```cpp
-    Expr(); // throws clang_compile_error
+    Expr(); // Throws `clang_compile_error`
 ```
 <!-- .element: class="fragment" data-fragment-index="3" -->
 
@@ -468,7 +471,7 @@ template <auto Expr>
 ### Utilities / Meta / Assert
 
 ```cpp
-using meta = std::string; // in the reflection proposal
+using meta = std::string; // In the reflection proposal
                           // meta would correspond to an
                           // Abstract Syntax Tree (AST) node
 ```
@@ -509,7 +512,7 @@ template <auto TExpr> [[clang::jit]] auto jit_assert() -> void {
 ### Read–eval–print loop (REPL)
 
 ```cpp
-std::vector<std::string> v{};
+std::vector<meta> v{};
 ```
 <!-- .element: class="fragment" -->
 
@@ -528,7 +531,7 @@ v.push_back("double");
 ```cpp
 jit_assert<"[]{ return std::is_same_v<std::tuple<int, double>,"s +
   "std::tuple<" + join(v, [](const auto& e) { return e; }), ',') +
-">>; }">();
+">>; }">()
 ```
 <!-- .element: class="fragment" -->
 
@@ -642,7 +645,7 @@ template <auto... Ns> auto sort(auto... ns) -> std::string {
 
 ```cpp
   return "std::array{" +
-    join([](const auto& e) { return std::to_string(e); }, ",") +
+    join([](const auto& e) { return std::to_string(e); }, ',') +
   '}';
 ```
 <!-- .element: class="fragment" data-fragment-index="3" -->
@@ -657,7 +660,7 @@ template <auto... Ns> auto sort(auto... ns) -> std::string {
 ```cpp
 jit_assert<"[]{ return " +
   sort<1, 9, 3>(4, 2, 7) + " == std::array{1, 2, 3, 4, 7, 9}; }";
->();
+>()
 ```
 <!-- .element: class="fragment" data-fragment-index="4" -->
 
@@ -735,15 +738,15 @@ constexpr auto make_dispatcher(const auto& mappings) {
 ---
 
 ```cpp
-template <class TDispatcher, auto Event>
-[[clang::jit]] auto dispatch() -> void {
+template <class TDispatcher>
+[[clang::jit]] auto dispatch(auto event) -> void {
 ```
 <!-- .element: class="fragment" data-fragment-index="3" -->
 
 ```cpp
   boost::mp11::mp_map_find<
-    TDispatcher, decltype(Event)
-  >::on(Event);
+    TDispatcher, decltype(event)
+  >::on(event);
 ```
 <!-- .element: class="fragment" data-fragment-index="4" -->
 
@@ -756,30 +759,30 @@ template <class TDispatcher, auto Event>
 
 ### Compile-time dispatch
 
-<pre><code>dispatch<​make_dispatcher(mappings), "e1{}">()</code> -> <font color="lime">foo</font></pre>
+<pre><code>dispatch<​make_dispatcher(mappings)>(e1{})</code> -> <font color="lime">foo</font></pre>
 <!-- .element: class="fragment" -->
 
 <img src="images/asm_dispatch.png" style="width: 35%; background:none; border:none; box-shadow:none;" />
 <!-- .element: class="fragment" -->
 
-<pre><code>dispatch<​make_dispatcher(mappings), "e2{}">()</code> -> <font color="lime">bar</font></pre>
+<pre><code>dispatch<​make_dispatcher(mappings)>(e2{})</code> -> <font color="lime">bar</font></pre>
 <!-- .element: class="fragment" -->
 
 ----
 
 ### Compile-time dispatch
 
-<pre><code>dispatch<​make_dispatcher(mappings), "e3{}">()</code> // <font color="gray">run-time compilation error</font><br/> -> <font color="salmon">error: type 'mp_map_find<
+<pre><code>dispatch<​make_dispatcher(mappings)>(e3{})</code> // <font color="gray">Run-time compilation error</font><br/> -> <font color="salmon">error: type 'mp_map_find<
                    boost::mp11::mp_list<
-                     std::pair<​e2, bar>,
-                     std::pair<​e1, foo>
+                     std::pair<​e1, foo>,
+                     std::pair<​e2, bar>
                    >,
                    decltype((lambda at <built-in>:1:10)())
                  >' (aka 'void')
     cannot be used prior to '::' because it has no members</font></pre>
 <!-- .element: class="fragment" -->
 
-<pre><code>dispatch<​make_dispatcher(mappings), "e4{}">()</code> // <font color="gray">run-time compilation error</font><br/> -> <font color="salmon">error: use of undeclared identifier 'e4'</font></pre>
+<pre><code>dispatch<​make_dispatcher(mappings)>(e4{})</code> // <font color="gray">Run-time compilation error</font><br/> -> <font color="salmon">error: use of undeclared identifier 'e4'</font></pre>
 <!-- .element: class="fragment" -->
 
 ----
@@ -802,7 +805,7 @@ constexpr auto make_dispatcher(const auto& mappings) {
 <!-- .element: class="fragment" data-fragment-index="2" -->
 
 ```cpp
-  return R"([](auto id) {
+  return R"([](int id) {
     switch(id) { default: assert(false); break;)" +
       join(mappings, [](const auto& mapping) {
         const auto [ event, handler ] = mapping;
@@ -824,7 +827,7 @@ constexpr auto make_dispatcher(const auto& mappings) {
 
 ```cpp
 template <auto Dispatch>
-[[clang::jit]] auto dispatch(auto id) -> void {
+[[clang::jit]] auto dispatch(int id) -> void {
   Dispatch(id);
 }
 ```
@@ -852,7 +855,7 @@ template <auto Dispatch>
 <!-- .element: class="fragment" data-fragment-index="1" -->
 
 ```cpp
-auto dispatch(auto id) -> void {
+auto dispatch(int id) -> void {
   Dispatch(id);
 }
 ```
@@ -874,7 +877,7 @@ auto dispatch(auto id) -> void {
 
 ### Save library/binary
 
-<pre><code>auto dispatch(int) -> void;</code>// No templates in the mangled symbol</font></pre>
+<pre><code>auto dispatch(int) -> void;</code> // No templates in the mangled symbol</font></pre>
 <!-- .element: class="fragment" -->
 
 ```cpp
@@ -892,11 +895,11 @@ llc -filetype=obj dispatch.ir -o dispatch.o # IR to an object file
 <!-- .element: class="fragment" -->
 
 ```sh
-clang++ dispatch.o main.cpp -o dispatch # no -fjit required
+clang++ dispatch.o main.cpp -o dispatch     # No `-fjit` required
 ```
 <!-- .element: class="fragment" -->
 
-<pre><code>ls -lh dispatch</code> -> <font color="white">1.3M # compiler is not included</font></pre>
+<pre><code>ls -lh dispatch</code> -> <font color="white">1.3M # Compiler is not included</font></pre>
 <!-- .element: class="fragment" -->
 
 <pre><code>nm dispatch | grep dispatch</code> -> <font color="white">_Z3dispatchi</font></pre>
@@ -915,7 +918,7 @@ clang++ dispatch.o main.cpp -o dispatch # no -fjit required
 <pre><code>./dispatch 2</code> -> <font color="lime">bar</font></pre>
 <!-- .element: class="fragment" -->
 
-<pre><code>./dispatch 0</code> -> <font color="gray"># Empty / NDEBUG</font></pre>
+<pre><code>./dispatch 0</code> -> <font color="gray"># NDEBUG</font></pre>
 <!-- .element: class="fragment" -->
 
 ----
@@ -959,10 +962,10 @@ We can use JIT to check that the type satisfies the concept.
 
 ### JIT + concepts
 
-<pre><code>jit_assert<"[]{ return readable_io<​my_readable_io>; }">();</code> -> <font color="lime">👍</font></pre>
+<pre><code>jit_assert<"[]{ return readable_io<​my_readable_io>; }">()</code> -> <font color="lime">👍</font></pre>
 <!-- .element: class="fragment" -->
 
-<pre><code>jit_assert<"[]{ return readable_io<​my_illiterate_io>; }">();</code> -> <font color="salmon">error: static assertion failed<br/>    constraints not satisfied</font></pre>
+<pre><code>jit_assert<"[]{ return readable_io<​my_illiterate_io>; }">()</code> -> <font color="salmon">error: static assertion failed<br/>    constraints not satisfied</font></pre>
 <!-- .element: class="fragment" -->
 
 Notes:
@@ -1023,7 +1026,7 @@ struct user_io_type {
 ```cpp
 jit_assert<"[]{ return readable_io<decltype("s +
                 "[]{ using T = " + user_code +
-                "; return T{}; }())>; }">();
+                "; return T{}; }())>; }">()
 ```
 <!-- .element: class="fragment" -->
 
@@ -1073,7 +1076,7 @@ struct readable_io_wrapper : T {
 
 ```cpp
 template <class TUserIO>
-[[clang::jit]] jit_user_readable_io() {
+[[clang::jit]] auto jit_user_readable_io() {
   return readable_io_wrapper<TUserIO, PrivilegeLevel::USER>{};
 }
 ```
