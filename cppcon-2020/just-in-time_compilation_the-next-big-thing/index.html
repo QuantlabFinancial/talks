@@ -937,14 +937,29 @@ struct my_readable_io {
 ```
 <!-- .element: class="fragment" -->
 
----
-
-<pre><code>jit_assert<"[]{ return readable_io<​my_readable_io>; }">()</code> -> <font color="lime">👍</font></pre>
+```cpp
+struct my_illiterate_io {
+  auto read() -> void;
+};
+```
 <!-- .element: class="fragment" -->
 
-<pre><code>jit_assert<"[]{ return readable_io<
-  decltype([]{ struct{} not_readable_io;
-               return not_readable_io{}; }())>; }">()</code> -> <font color="salmon">error: static assertion failed<br/>    constraints not satisfied</font></pre>
+Notes:
+
+Here we have a concept. Not a very good concept, but a concept nevertheless.
+
+And here we have a type that satisfies the concept.
+
+We can use JIT to check that the type satisfies the concept.
+
+----
+
+### JIT + concepts
+
+<pre><code>jit_assert<"[]{ return readable_io<​my_readable_io>; }">();</code> -> <font color="lime">👍</font></pre>
+<!-- .element: class="fragment" -->
+
+<pre><code>jit_assert<"[]{ return readable_io<​my_illiterate_io>; }">();</code> -> <font color="salmon">error: static assertion failed<br/>    constraints not satisfied</font></pre>
 <!-- .element: class="fragment" -->
 
 Notes:
@@ -952,11 +967,67 @@ Notes:
 We can check the concept at the point where we "load" the user code, without
 incurring the full cost of compilation, and we can give them a nice error.
 
-Here we have a concept. Not a very good concept, but a concept nevertheless.
+Of course the question remains: how to produce a well-formed string to jit?
 
-And here we have a type that satisfies the concept.
+This code assumes we know the name of the struct, which we will have to somehow
+figure out if this is user code passed to us at runtime to jit.
 
-We can use JIT to check that the type satisfies the concept.
+----
+
+### User code
+
+```cpp
+// onerous?
+decltype([] {
+  struct user_io_type {
+    auto read(std::byte* buffer, std::size_t size) -> std::size_t {
+      // user code here
+    }
+  };
+  return user_io_type{};
+}())
+```
+<!-- .element: class="fragment" -->
+
+```cpp
+// desired?
+struct user_io_type {
+  auto read(std::byte* buffer, std::size_t size) -> std::size_t {
+    // user code here
+  }
+};
+```
+<!-- .element: class="fragment" -->
+
+Notes:
+
+It's a bit onerous for the user to have to wrap everything in a lambda
+expression? We would like them to be able to supply types.
+
+----
+
+### Easier user code
+
+```cpp
+struct user_io_type {
+  auto read(std::byte* buffer, std::size_t size) -> std::size_t {
+    // user code here
+  }
+};
+```
+<!-- .element: class="fragment" -->
+
+```cpp
+jit_assert<"[]{ return readable_io<decltype("s +
+                "[]{ using T = " + user_code +
+                "; return T{}; }())>; }">();
+```
+<!-- .element: class="fragment" -->
+
+Notes:
+
+We can wrap the user code in a lambda ourselves using a judicious `using`
+declaration.
 
 ----
 
