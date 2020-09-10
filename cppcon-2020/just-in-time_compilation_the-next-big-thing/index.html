@@ -939,14 +939,13 @@ struct my_readable_io {
 
 ---
 
-```cpp
-auto check(const std::string& concept_name,
-           const std::string& type) -> bool {
-  return jit_compiles<
-    "[](" + concept_name + " auto){}(" + type + "{})"
-  >();
-}
-```
+<pre><code>jit_assert<"[]{ return readable_io< my_readable_io >; }">()</code> -> <font color="lime">👍</font></pre>
+<!-- .element: class="fragment" -->
+
+<pre><code>jit_assert<"[]{ return readable_io<
+  decltype([]{ struct not_readable_io{}; return not_readable_io{}; }())
+>; }">()</code> -> <font color="salmon">error: static assertion failed<br/>    constraints not satisfied</font></pre>
+
 <!-- .element: class="fragment" -->
 
 Notes:
