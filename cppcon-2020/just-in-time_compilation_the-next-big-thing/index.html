@@ -46,7 +46,8 @@
 
 ---
 
-## Just-in-Time Compilation: The Next Big Thing?
+## Just-in-Time Compilation:
+## The Next Big Thing?
 
 ---
 
@@ -640,9 +641,9 @@ template <auto... Ns> auto sort(auto... ns) -> std::string {
 <!-- .element: class="fragment" data-fragment-index="2" -->
 
 ```cpp
-  return "std::array<" +
+  return "std::array{" +
     join([](const auto& e) { return std::to_string(e); }, ",") +
-  '>';
+  '}';
 ```
 <!-- .element: class="fragment" data-fragment-index="3" -->
 
@@ -778,7 +779,7 @@ template <class TDispatcher, auto Event>
     cannot be used prior to '::' because it has no members</font></pre>
 <!-- .element: class="fragment" -->
 
-<pre><code>dispatch< make_dispatcher(mappings), "e4{}" >()</code> // <font color="gray">run-time compilation error</font><br/> -> <font color="salmon">error: use of undeclared identifier 'e4'</font></pre>
+<pre><code>dispatch<​make_dispatcher(mappings), "e4{}">()</code> // <font color="gray">run-time compilation error</font><br/> -> <font color="salmon">error: use of undeclared identifier 'e4'</font></pre>
 <!-- .element: class="fragment" -->
 
 ----
