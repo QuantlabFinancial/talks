@@ -943,7 +943,7 @@ struct my_readable_io {
 <!-- .element: class="fragment" -->
 
 <pre><code>jit_assert<"[]{ return readable_io<
-  decltype([]{ struct not_readable_io{}; return not_readable_io{}; }())
+  decltype([]{ struct{} not_readable_io; return not_readable_io; }())
 >; }">()</code> -> <font color="salmon">error: static assertion failed<br/>    constraints not satisfied</font></pre>
 
 <!-- .element: class="fragment" -->
