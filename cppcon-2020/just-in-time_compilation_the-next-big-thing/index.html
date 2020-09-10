@@ -930,6 +930,8 @@ concept readable_io =
 ```
 <!-- .element: class="fragment" -->
 
+---
+
 ```cpp
 struct my_readable_io {
   auto read(std::byte* buffer, std::size_t size) -> std::size_t;
@@ -978,7 +980,7 @@ figure out if this is user code passed to us at runtime to jit.
 
 ```cpp
 // onerous?
-decltype([] {
+decltype([]{
   struct user_io_type {
     auto read(std::byte* buffer, std::size_t size) -> std::size_t {
       // user code here
@@ -1102,16 +1104,17 @@ errors rather than to completely protect.
 
 ### JITting user code? Why not JIT dev code?
 
-Breaking down the walls of the compiler & linker
-
-* #### (+) Incremental compilation on a running system
+* #### Breaking down the walls of the compiler & linker
 <!-- .element: class="fragment" -->
 
-* #### (+) Patching with source code
-<!-- .element: class="fragment" -->
+  * #### (+) Incremental compilation on a running system
+  <!-- .element: class="fragment" -->
 
-* #### (+) Programming with concepts: platform team vs application team
-<!-- .element: class="fragment" -->
+  * #### (+) Patching with source code
+  <!-- .element: class="fragment" -->
+
+  * #### (+) Programming with concepts: platform team vs application team
+  <!-- .element: class="fragment" -->
 
 Notes:
 
