@@ -897,7 +897,7 @@ llc -filetype=obj dispatch.ir -o dispatch.o # IR to an object file
 <!-- .element: class="fragment" -->
 
 ```sh
-$CXX dispatch.o main.cpp -o dispatch        # No `-fjit` required
+$CXX dispatch.o main.cpp -o dispatch # No `-fjit` required
 ```
 <!-- .element: class="fragment" -->
 
@@ -1126,11 +1126,11 @@ Notes:
 
 ==============================================================================
 
-## Summary
+## Summary / Future?
 
 ----
 
-### Pros & Cons
+### JIT - Costs & Benefits
 
 #### (+) Run-time performance (Optimizations based on run-time data/available hardware)
 <!-- .element: align="left" class="fragment" data-fragment-index="1" -->
@@ -1151,7 +1151,7 @@ Notes:
 
 ----
 
-### Future?
+### Future? / Compile-Time & Run-Time
 
 <pre><code>template <​class T>
 [[clang::jit]] auto future();</code> // <font color="darkgray">Run-time</font><br/> -> <font color="white">auto jit = "int"s; future<​jit>()</font></pre>
@@ -1174,12 +1174,7 @@ Notes:
 
 ----
 
-### Future?
-
----
-
-#### Stringless solution?
-<!-- .element: class="fragment" data-fragment-index="0" -->
+### Future? / Meta - Stringless Solution
 
 ```cpp
 auto i = 42; // Run-Time value
@@ -1187,8 +1182,7 @@ auto i = 42; // Run-Time value
 <!-- .element: class="fragment" data-fragment-index="1" -->
 
 ```cpp
-// `reify`/`reflexpr` (AST node)
-using type = meta<std::integral_constant>(i);
+using type = reify(meta<std::integral_constant>(i)); // AST node
 ```
 <!-- .element: class="fragment" data-fragment-index="2" -->
 
@@ -1199,7 +1193,7 @@ using type = meta<std::integral_constant>(i);
 
 ----
 
-### JIT in the compiler / Speculation
+### Future? / JIT in the compiler - Speculation
 
 > Compilation is ~becoming~ quite complicated
 <!-- .element: class="fragment" -->
@@ -1220,21 +1214,15 @@ JIT workflow supports. And it can be recursive.
 
 ----
 
-### Cost/benefits of JIT in the compiler itself
+### Future? / JIT in the compiler
 
-* #### (+) Compile-time performance (memoized `constexpr`)
+* #### Data promotion from compile-time to runtime?
 <!-- .element: class="fragment" -->
 
-* #### (+) Everything available in `constexpr` world
+* #### Compilation time variability?
 <!-- .element: class="fragment" -->
 
-* #### (+) Data promotion from compile-time to runtime?
-<!-- .element: class="fragment" -->
-
-* #### (-) Compilation time variability?
-<!-- .element: class="fragment" -->
-
-* #### (?) Cross compilation?
+* #### Cross compilation?
 <!-- .element: class="fragment" -->
 
 Notes:
