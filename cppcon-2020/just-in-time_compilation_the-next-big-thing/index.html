@@ -880,32 +880,37 @@ auto dispatch(int id) -> void {
 ### Save library/binary
 
 <pre><code>auto dispatch(int) -> void;</code> // No templates in the mangled symbol</font></pre>
-<!-- .element: class="fragment" -->
+<!-- .element: class="fragment" data-fragment-index="1" -->
 
 ```cpp
 int main(int argc, const char** argv) {
   dispatch(std::stoi(argv[1]));
 }
 ```
-<!-- .element: class="fragment" -->
+<!-- .element: class="fragment" data-fragment-index="2" -->
 
 ---
 
 ```sh
 $LLC -filetype=obj dispatch.ir -o dispatch.o # IR to an object file
 ```
-<!-- .element: class="fragment" -->
+<!-- .element: class="fragment" data-fragment-index="3" -->
 
 ```sh
 $CXX dispatch.o main.cpp -o dispatch # No `-fjit` required
 ```
-<!-- .element: class="fragment" -->
+<!-- .element: class="fragment" data-fragment-index="4" -->
 
 <pre><code>ls -lh dispatch</code> -> <font color="white">1.1M # Compiler is not included</font></pre>
-<!-- .element: class="fragment" -->
+<!-- .element: class="fragment" data-fragment-index="5" -->
 
 <pre><code>nm dispatch | grep dispatch</code> -> <font color="white">_Z3dispatchi</font></pre>
-<!-- .element: class="fragment" -->
+<!-- .element: class="fragment" data-fragment-index="6" -->
+
+---
+
+##### [LLVM static compiler](https://llvm.org/docs/CommandGuide/llc.html)
+<!-- .element: class="fragment" data-fragment-index="3" -->
 
 ----
 
