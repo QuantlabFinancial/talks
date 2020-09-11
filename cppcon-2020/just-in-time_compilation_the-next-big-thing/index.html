@@ -76,7 +76,7 @@ Introductions:
 * #### Examples: C++20 and beyond
 <!-- .element: class="fragment" data-fragment-index="4" -->
 
-* #### Summary
+* #### Summary / Future?
 <!-- .element: class="fragment" data-fragment-index="5" -->
 
 ---
@@ -302,8 +302,9 @@ template <class T>
 <!-- .element: class="fragment" data-fragment-index="1" -->
 
 ```cpp
-[[clang::jit]] // Instantiation at run-time
+[[clang::jit]] // Instantiation at Run-Time
                // Point-Of-Instantiation (POI)
+               // Ignored if not used
 ```
 <!-- .element: class="fragment" data-fragment-index="4" -->
 
@@ -316,10 +317,10 @@ auto jit() -> void {
 
 ---
 
-<pre><code>jit<​int>()   // type</code> -> <font color="lime">i</font></pre>
+<pre><code>jit<​int>()   // Type</code> -> <font color="lime">i</font></pre>
 <!-- .element: class="fragment" data-fragment-index="3" -->
 
-<pre><code>jit<​"int">() // type-string</code> -> <font color="lime">i</font></pre>
+<pre><code>jit<​"int">() // TypeString</code> -> <font color="lime">i</font></pre>
 <!-- .element: class="fragment" data-fragment-index="5" -->
 
 <pre><code>auto type = "int"s; jit<​type>()</code> -> <font color="lime">i</font></pre>
@@ -386,7 +387,7 @@ template <class T>
 ---
 
 ```cpp
-template <auto Expr>
+template <auto Expr> // Non-Type Template Parameter (NTTP)
 [[clang::jit]] auto jit() -> void {
   Expr();
 }
@@ -566,7 +567,7 @@ int main() {
 <pre><code>USER=John ./cpp_injection</code> -> <font color="lime">John</font></pre>
 <!-- .element: class="fragment" -->
 
-<pre><code>USER="\";std::system(\"rm -rf /\");\"" ./cpp_injection</code> // <font color="gray">[]{ std::cout << "";std::system("rm -rf /");""; }</font><br/> -> <font color="lime">🔓</font></pre>
+<pre><code>USER="\";std::system(\"rm -rf /\");\"" ./cpp_injection</code> // <font color="darkgray">[]{ std::cout << "";std::system("rm -rf /");""; }</font><br/> -> <font color="lime">🔓</font></pre>
 <!-- .element: class="fragment"-->
 
 ----
@@ -773,7 +774,7 @@ template <class TDispatcher>
 
 ### Compile-time dispatch
 
-<pre><code>dispatch<​make_dispatcher(mappings)>(e3{})</code> // <font color="gray">Run-time compilation error</font><br/> -> <font color="salmon">error: type 'mp_map_find<
+<pre><code>dispatch<​make_dispatcher(mappings)>(e3{})</code> // <font color="darkgray">Run-time compilation error</font><br/> -> <font color="salmon">error: type 'mp_map_find<
                    boost::mp11::mp_list<
                      std::pair<​e1, foo>,
                      std::pair<​e2, bar>
@@ -783,7 +784,7 @@ template <class TDispatcher>
     cannot be used prior to '::' because it has no members</font></pre>
 <!-- .element: class="fragment" -->
 
-<pre><code>dispatch<​make_dispatcher(mappings)>(e4{})</code> // <font color="gray">Run-time compilation error</font><br/> -> <font color="salmon">error: use of undeclared identifier 'e4'</font></pre>
+<pre><code>dispatch<​make_dispatcher(mappings)>(e4{})</code> // <font color="darkgray">Run-time compilation error</font><br/> -> <font color="salmon">error: use of undeclared identifier 'e4'</font></pre>
 <!-- .element: class="fragment" -->
 
 ----
@@ -896,11 +897,11 @@ llc -filetype=obj dispatch.ir -o dispatch.o # IR to an object file
 <!-- .element: class="fragment" -->
 
 ```sh
-clang++ dispatch.o main.cpp -o dispatch     # No `-fjit` required
+$CXX dispatch.o main.cpp -o dispatch        # No `-fjit` required
 ```
 <!-- .element: class="fragment" -->
 
-<pre><code>ls -lh dispatch</code> -> <font color="white">1.3M # Compiler is not included</font></pre>
+<pre><code>ls -lh dispatch</code> -> <font color="white">1.1M # Compiler is not included</font></pre>
 <!-- .element: class="fragment" -->
 
 <pre><code>nm dispatch | grep dispatch</code> -> <font color="white">_Z3dispatchi</font></pre>
@@ -919,7 +920,7 @@ clang++ dispatch.o main.cpp -o dispatch     # No `-fjit` required
 <pre><code>./dispatch 2</code> -> <font color="lime">bar</font></pre>
 <!-- .element: class="fragment" -->
 
-<pre><code>./dispatch 0</code> -> <font color="gray"># NDEBUG</font></pre>
+<pre><code>./dispatch 0</code> -> <font color="darkgray"># NDEBUG</font></pre>
 <!-- .element: class="fragment" -->
 
 ----
@@ -1131,38 +1132,37 @@ Notes:
 
 ### Pros & Cons
 
-* #### (+) Purely C++ solution
-<!-- .element: class="fragment" -->
+#### (+) Run-time performance (Optimizations based on run-time data/available hardware)
+<!-- .element: align="left" class="fragment" data-fragment-index="1" -->
 
-* #### (+) Direct access to the host
-<!-- .element: class="fragment" -->
+#### (+) Compile-time performance (Memoization)
+<!-- .element: align="left" class="fragment" data-fragment-index="2" -->
 
-* #### (+) Compile-time performance (Memoization)
-<!-- .element: class="fragment" -->
+#### (+) Direct access to the host / C++ Attribute
+<!-- .element: align="left" class="fragment" data-fragment-index="3" -->
 
-* #### (+) Run-time performance (Optimizations based run-time on data/hardware)
-<!-- .element: class="fragment" -->
+---
 
-* #### (-) Based on strings (security concerns)
-<!-- .element: class="fragment" -->
+#### (-) Based on strings (security concerns)
+<!-- .element: align="left" class="fragment" data-fragment-index="1" -->
 
-* #### (-) Doesn't support compile-time injection
-<!-- .element: class="fragment" -->
+#### (-) Doesn't support compile-time injection
+<!-- .element: align="left" class="fragment" data-fragment-index="2" -->
 
 ----
 
 ### Future?
 
 <pre><code>template <​class T>
-[[clang::jit]] auto future();</code> <font color="black">Run-time</font><br/> -> <font color="white">auto jit = "int"s; future<​jit>();</font></pre>
+[[clang::jit]] auto future();</code> // <font color="darkgray">Run-time</font><br/> -> <font color="white">auto jit = "int"s; future<​jit>()</font></pre>
 <!-- .element: class="fragment" data-fragment-index="3" -->
 
 <pre><code>template <​class T>
-[[clang::jit]] constexpr auto future();</code> <font color="black">Run/Compile-time</font><br/> -> <font color="white">auto jit = "int"s; future<​jit>();</font><br/> -> <font color="white">future<"int">();</font></pre>
+[[clang::jit]] constexpr auto future();</code> // <font color="darkgray">Run/Compile-time</font><br/> -> <font color="white">auto jit = "int"s; future<​jit>();</font><br/> -> <font color="white">future<"int">()</font></pre>
 <!-- .element: class="fragment" data-fragment-index="4" -->
 
 <pre><code>template <​class T>
-[[clang::jit]] consteval auto future();</code> <font color="black">Compile-time</font><br/> -> <font color="white">future<"int">();</font></pre>
+[[clang::jit]] consteval auto future();</code> // <font color="darkgray">Compile-time</font><br/> -> <font color="white">future<"int">()</font></pre>
 <!-- .element: class="fragment" data-fragment-index="5" -->
 
 ---
@@ -1171,6 +1171,31 @@ Notes:
  -> future<int>() // Valid in all cases
 ```
 <!-- .element: class="fragment" data-fragment-index="6" -->
+
+----
+
+### Future?
+
+---
+
+#### Stringless solution?
+<!-- .element: class="fragment" data-fragment-index="0" -->
+
+```cpp
+auto i = 42; // Run-Time value
+```
+<!-- .element: class="fragment" data-fragment-index="1" -->
+
+```cpp
+// `reify`/`reflexpr` (AST node)
+using type = meta<std::integral_constant>(i);
+```
+<!-- .element: class="fragment" data-fragment-index="2" -->
+
+---
+
+<pre><code>future<​type>()</code> // <font color="darkgray">future<​std::integral_constant<42>>()</font></pre>
+<!-- .element: class="fragment" data-fragment-index="3" -->
 
 ----
 
