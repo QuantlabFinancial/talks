@@ -364,7 +364,7 @@ $CXX -fjit hello_world.cpp -o hello_world
 <!-- .element: class="fragment" data-fragment-index="3" -->
 
 <pre><code>./hello_world "error"</code> -> <font color="salmon">terminate called after throwing an instance of
-    'clang_compile_error'</font></pre>
+    'compilation_error'</font></pre>
 <!-- .element: class="fragment" data-fragment-index="4" -->
 
 ----
@@ -413,13 +413,13 @@ template <auto Expr>
 <!-- .element: class="fragment" data-fragment-index="2" -->
 
 ```cpp
-    Expr(); // Throws `clang_compile_error`
+    Expr(); // Throws `compilation_error`
 ```
 <!-- .element: class="fragment" data-fragment-index="3" -->
 
 ```cpp
-  } catch(const clang_compile_error& err) {
-    std::cerr << err.what() << '\n';
+  } catch(const compilation_error& error) {
+    std::cerr << error.what() << '\n';
   }
 ```
 <!-- .element: class="fragment" data-fragment-index="2" -->
@@ -440,17 +440,19 @@ template <auto Expr>
 
 ```cpp
 template <auto Expr>
-[[clang::jit]] auto jit_compiles() -> expected<clang_compile_error> {
+[[clang::jit]] auto jit_compiles() ->
+  std::expected<compilation_error> {
 ```
 <!-- .element: class="fragment" data-fragment-index="1" -->
 
 ```cpp
   try {
     jit<Expr>();
-  } catch(const clang_compile_error& err) {
-    return err;
+  } catch(const compilation_error& error) {
+    return error;
   }
-  return true;
+
+  return {};
 ```
 <!-- .element: class="fragment" data-fragment-index="2" -->
 
@@ -706,9 +708,9 @@ struct e3 {};
 
 ```cpp
 // Mappings
-std::unordered_map<std::string, std::string> mappings = {
-  { "e1", "foo" },
-  { "e2", "bar" }
+std::unordered_map mappings = {
+  std::pair{ "e1", "foo" },
+  std::pair{ "e2", "bar" }
 };
 ```
 <!-- .element: class="fragment"-->
