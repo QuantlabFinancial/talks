@@ -689,8 +689,8 @@ Note that `sort` doesn't have to be `constexpr`!
 
 ```cpp
 // Handlers
-struct foo { static auto on(auto event) { std::puts("foo"); } };
-struct bar { static auto on(auto event) { std::puts("bar"); } };
+struct foo { static auto on(const auto& event){ std::puts("foo"); } };
+struct bar { static auto on(const auto& event){ std::puts("bar"); } };
 ```
 <!-- .element: class="fragment"-->
 
@@ -740,13 +740,13 @@ constexpr auto make_dispatcher(const auto& mappings) {
 ---
 
 ```cpp
-template <class TDispatcher>
-[[clang::jit]] auto dispatch(auto event) -> void {
+template <class TDispatcher, class TEvent>
+[[clang::jit]] auto dispatch(const TEvent& event) -> void {
 ```
 <!-- .element: class="fragment" data-fragment-index="3" -->
 
 ```cpp
-  boost::mp11::mp_map_find<TDispatcher, decltype(event)>::on(event);
+  boost::mp11::mp_map_find<TDispatcher, TEvent>::on(event);
 ```
 <!-- .element: class="fragment" data-fragment-index="4" -->
 
