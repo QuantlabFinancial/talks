@@ -746,9 +746,7 @@ template <class TDispatcher>
 <!-- .element: class="fragment" data-fragment-index="3" -->
 
 ```cpp
-  boost::mp11::mp_map_find<
-    TDispatcher, decltype(event)
-  >::on(event);
+  boost::mp11::mp_map_find<TDispatcher, decltype(event)>::on(event);
 ```
 <!-- .element: class="fragment" data-fragment-index="4" -->
 
@@ -756,6 +754,9 @@ template <class TDispatcher>
 }
 ```
 <!-- .element: class="fragment" data-fragment-index="3" -->
+
+###### * [mp_map_find](https://www.boost.org/doc/libs/1_66_0/libs/mp11/doc/html/mp11.html#mp_map_find_m_k) is an alias for the element of the map M with a key K, or for void, if there is no such element
+<!-- .element: class="fragment" data-fragment-index="4" -->
 
 ----
 
@@ -779,7 +780,7 @@ template <class TDispatcher>
                      std::pair<​e1, foo>,
                      std::pair<​e2, bar>
                    >,
-                   decltype((lambda at <built-in>:1:10)())
+                   e3
                  >' (aka 'void')
     cannot be used prior to '::' because it has no members</font></pre>
 <!-- .element: class="fragment" -->
@@ -814,7 +815,8 @@ constexpr auto make_dispatcher(const auto& mappings) {
         return "case " + event + "::id:" + handler +
           "::on(" + event + "{}); break;";
       }) +
-    "}};";
+    '}' +
+  '}';
 ```
 <!-- .element: class="fragment" data-fragment-index="3" -->
 
@@ -843,7 +845,7 @@ template <auto Dispatch>
 <pre><code>dispatch<​make_dispatcher(mappings)>(2)</code> -> <font color="lime">bar</font></pre>
 <!-- .element: class="fragment" data-fragment-index="5" -->
 
-<pre><code>dispatch<​make_dispatcher(mappings)>(0)</code> -> <font color="salmon">Assertion `false' failed</font></pre>
+<pre><code>dispatch<​make_dispatcher(mappings)>(0)</code> -> <font color="salmon">Assertion `false' failed</font> // Default case</pre>
 <!-- .element: class="fragment" data-fragment-index="6" -->
 
 ----
@@ -925,7 +927,7 @@ $CXX dispatch.o main.cpp -o dispatch # No `-fjit` required
 <pre><code>./dispatch 2</code> -> <font color="lime">bar</font></pre>
 <!-- .element: class="fragment" -->
 
-<pre><code>./dispatch 0</code> -> <font color="darkgray"># NDEBUG</font></pre>
+<pre><code>./dispatch 0</code> -> <font color="darkgray"># If NDEBUG is defined then assert does nothing</font> // Default case</pre>
 <!-- .element: class="fragment" -->
 
 ----
