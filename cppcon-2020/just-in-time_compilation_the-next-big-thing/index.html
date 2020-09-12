@@ -727,7 +727,7 @@ constexpr auto make_dispatcher(const auto& mappings) {
 ```cpp
   return "boost::mp11::mp_list<" +
     join(mappings, [](const auto& mapping) {
-      const auto [ event, handler ] = mapping;
+      const auto& [ event, handler ] = mapping;
       return "std::pair<" + event + ',' + handler + '>';
     }, ',') +
   '>';
@@ -813,7 +813,7 @@ constexpr auto make_dispatcher(const auto& mappings) {
   return R"([](int id) {
     switch(id) { default: assert(false); break;)" +
       join(mappings, [](const auto& mapping) {
-        const auto [ event, handler ] = mapping;
+        const auto& [ event, handler ] = mapping;
         return "case " + event + "::id:" + handler +
           "::on(" + event + "{}); break;";
       }) +
