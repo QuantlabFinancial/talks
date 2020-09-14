@@ -962,6 +962,7 @@ struct my_illiterate_io {
 Notes:
 
 Here we have a concept. Not a very good concept, but a concept nevertheless.
+(Explain concept)
 
 And here we have a type that satisfies the concept.
 
@@ -982,10 +983,12 @@ Notes:
 We can check the concept at the point where we "load" the user code, without
 incurring the full cost of compilation, and we can give them a nice error.
 
-Of course the question remains: how to produce a well-formed string to jit?
+Of course the question remains: how to produce a well-formed string to jit? The
+strings we have here are hardcoded: if the io type is given to us as "C++ text"
+from the user, what are we going to do with it?
 
 This code assumes we know the name of the struct, which we will have to somehow
-figure out if this is user code passed to us at runtime to jit.
+figure out if this is user code passed to us at runtime.
 
 ----
 
@@ -1016,6 +1019,13 @@ struct user_io_type {
 
 Notes:
 
+One way to do that is to wrap the type inside a lambda expression.
+
+We've seen this already in the talk, it's using the new C++20 feature of lambdas
+in unevaluated contexts.
+
+GCC 10.2 error with struct in lambda in decltype?
+
 It's a bit onerous for the user to have to wrap everything in a lambda
 expression? We would like them to be able to supply types.
 
@@ -1043,6 +1053,98 @@ Notes:
 
 We can wrap the user code in a lambda ourselves using a judicious `using`
 declaration.
+
+Because we are wrapping this in a lambda though, it's going to have some
+limitations on user code and what users can do.
+
+----
+
+### User code limitations
+
+```cpp
+// all of this is going inside a lambda
+```
+<!-- .element: class="fragment" data-fragment-index="0" -->
+
+``` cpp
+#include <3rd_party_library.h> // how?
+```
+<!-- .element: class="fragment" data-fragment-index="1" -->
+
+```cpp
+struct user_io_type {
+```
+<!-- .element: class="fragment" data-fragment-index="0" -->
+
+```cpp
+  auto a_function_template(auto arg) {
+    // error: templates cannot be declared inside of a local class
+  }
+```
+<!-- .element: class="fragment" data-fragment-index="2" -->
+
+```cpp
+  auto a_function() {
+    return [] (auto arg) {
+      // this is a sneaky function template!
+    };
+  }
+```
+<!-- .element: class="fragment" data-fragment-index="3" -->
+
+```cpp
+};
+```
+<!-- .element: class="fragment" data-fragment-index="0" -->
+
+Notes:
+
+Ultimately all user code is going into some evaluation context, where at the
+moment we can't have #include directives.
+
+We also have a limitation that local classes can't have templates inside them.
+And this is annoying to users: it looks like they're writing "normal" code, but
+there are a few hidden limitations.
+
+Of course, local classes CAN have templates because they can have generic
+lambdas. But they can't have "regular code" in there. So this is a workaround
+for that issue, but one that complicates both the JITted user code and the
+calling machinery of the host.
+
+----
+
+### Working around limitations
+
+* #### Precompiled headers
+<!-- .element: class="fragment" -->
+
+* #### Precompiled modules
+<!-- .element: class="fragment" -->
+
+* #### [Future] AST injection (meta/reflection)?
+<!-- .element: class="fragment" -->
+
+* #### [Nearer future?] Templates in local classes
+<!-- .element: class="fragment" -->
+
+  * #### [P1988 Allow Templates in Local Classes](https://wg21.link/p1988)
+  <!-- .element: class="fragment" -->
+
+  * #### [P2044 Member Templates for Local Classes](https://wg21.link/p2044)
+  <!-- .element: class="fragment" -->
+
+Notes:
+
+The user can control compilation, so they can specify precompiled fragments to
+the compiler - either headers or modules. And this is some sort of workaround.
+Maybe in future we'll have a better one.
+
+More likely sooner we'll get templates inside local classes, because we already
+have them with generic lambdas.
+
+P1988 by Steve Downey
+
+P2044 by Robert Leahy
 
 ----
 
