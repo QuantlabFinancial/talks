@@ -302,11 +302,16 @@ template <class T>
 <!-- .element: class="fragment" data-fragment-index="1" -->
 
 ```cpp
-[[clang::jit]] // Instantiation at Run-Time
-               // Point-Of-Instantiation (POI)
-               // Ignored if not used
+[[clang::jit]]
 ```
 <!-- .element: class="fragment" data-fragment-index="4" -->
+
+```cpp
+// Instantiation at Run-Time Point-Of-Instantiation (POI)
+// Ignored if not used
+// CXXFLAGS comes from the host compilation (Might be overwritten)
+```
+<!-- .element: class="fragment" data-fragment-index="5" -->
 
 ```cpp
 auto jit() -> void {
@@ -321,10 +326,10 @@ auto jit() -> void {
 <!-- .element: class="fragment" data-fragment-index="3" -->
 
 <pre><code>jit<​"int">() // TypeString</code> -> <font color="lime">i</font></pre>
-<!-- .element: class="fragment" data-fragment-index="5" -->
+<!-- .element: class="fragment" data-fragment-index="6" -->
 
 <pre><code>auto type = "int"s; jit<​type>()</code> -> <font color="lime">i</font></pre>
-<!-- .element: class="fragment" data-fragment-index="6" -->
+<!-- .element: class="fragment" data-fragment-index="7" -->
 
 ----
 
@@ -347,7 +352,7 @@ $CXX -fjit hello_world.cpp -o hello_world
 <pre><code>ls -lh hello_world</code> -> <font color="white">75M</font></pre>
 <!-- .element: class="fragment" data-fragment-index="3" -->
 
-##### Compiler and the pre-compiled module of the host is included in the binary
+##### Compiler and the pre-compiled module of the host are included in the binary
 <!-- .element: class="fragment" data-fragment-index="4" -->
 
 ----
