@@ -441,6 +441,10 @@ template <auto Expr>
 
 ----
 
+### Questions?
+
+----
+
 ### Utilities / compiles
 
 ```cpp
@@ -762,7 +766,7 @@ template <class TDispatcher, class TEvent>
 ```
 <!-- .element: class="fragment" data-fragment-index="3" -->
 
-###### * [mp_map_find](https://www.boost.org/doc/libs/1_66_0/libs/mp11/doc/html/mp11.html#mp_map_find_m_k) is an alias for the element of the map M with a key K, or for void, if there is no such element
+###### * [mp_map_find](https://www.boost.org/doc/libs/1_66_0/libs/mp11/doc/html/mp11.html#mp_map_find_m_k) - returns a handler for a given event or void otherwise
 <!-- .element: class="fragment" data-fragment-index="4" -->
 
 ----
@@ -883,7 +887,6 @@ auto dispatch(int id) -> void {
 ##### * Intermediate representation (IR)
 <!-- .element: class="fragment" data-fragment-index="3" -->
 
-
 ----
 
 ### Save library/binary
@@ -934,6 +937,10 @@ $CXX dispatch.o main.cpp -o dispatch # No `-fjit` required
 
 <pre><code>./dispatch 0</code> -> <font color="darkgray"># If NDEBUG is defined then assert does nothing</font> // Default case</pre>
 <!-- .element: class="fragment" -->
+
+----
+
+### Questions?
 
 ----
 
@@ -1305,9 +1312,27 @@ using type = reify(meta<std::integral_constant>(i)); // AST node
 <pre><code>future<​type>()</code> // <font color="darkgray">future<​std::integral_constant<42>>()</font></pre>
 <!-- .element: class="fragment" data-fragment-index="3" -->
 
+==============================================================================
+
+<a href="https://www.quantlab.com"><img src="images/quantlab-logo.svg" style="width: 35%; background:none; border:none; box-shadow:none;" /></a>
+
+---
+
+### Let's `JIT` all the things?!
+
+#### Questions? / [#sig_jit](https://cppcon.slack.com/archives/C01AE7CF1FWa)
+
+---
+
+#### https://github.com/QuantlabFinancial | https://www.quantlab.com/careers
+
+==============================================================================
+
+## Bonus slides
+
 ----
 
-### Future? / JIT in the compiler - Speculation
+### JIT in the compiler - Speculation
 
 > Compilation is ~becoming~ quite complicated
 <!-- .element: class="fragment" -->
@@ -1328,7 +1353,7 @@ JIT workflow supports. And it can be recursive.
 
 ----
 
-### Future? / JIT in the compiler
+### JIT in the compiler
 
 * #### Data promotion from compile-time to runtime?
 <!-- .element: class="fragment" -->
@@ -1341,19 +1366,6 @@ JIT workflow supports. And it can be recursive.
 
 Notes:
 Easier compiler development/extension? (Moddable compiler)
-
-==============================================================================
-
-<a href="https://www.quantlab.com"><img src="images/quantlab-logo.svg" style="width: 35%; background:none; border:none; box-shadow:none;" /></a>
-
----
-
-### Let's `JIT` all the things?!
-### Questions?
-
----
-
-#### https://github.com/QuantlabFinancial | https://www.quantlab.com/careers
           </script>
         </section>
 
