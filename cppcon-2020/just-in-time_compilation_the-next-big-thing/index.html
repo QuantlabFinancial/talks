@@ -944,7 +944,7 @@ $LLC -filetype=obj dispatch.ir -o dispatch.o # IR to an object file
 <!-- .element: class="fragment" data-fragment-index="3" -->
 
 ```sh
-$CXX dispatch.o main.cpp -o dispatch # No `-fjit` required
+$CXX $CXXFLAGS dispatch.o main.cpp -o dispatch # No `-fjit` required
 ```
 <!-- .element: class="fragment" data-fragment-index="4" -->
 
