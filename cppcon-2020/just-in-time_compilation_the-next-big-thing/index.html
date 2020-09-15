@@ -273,20 +273,11 @@ template GenStruct(string Name, string M1) {
 ```
 <!-- .element: class="fragment" data-fragment-index="1" -->
 
-```d
-mixin(GenStruct!("Foo", "bar")); // [[clang::jit]] at compile-time
-```
+<pre><code>mixin(GenStruct!("Foo", "bar")); // 'JITting' at Compile-time</code> -> <font color="darkgray">struct Foo { int bar; }</font></pre>
 <!-- .element: class="fragment" data-fragment-index="2" -->
 
----
-
-```d
-struct Foo { int bar; }
-```
-<!-- .element: class="fragment" data-fragment-index="3" -->
-
 #### https://dlang.org/articles/mixin.html
-<!-- .element: class="fragment" data-fragment-index="4" -->
+<!-- .element: class="fragment" data-fragment-index="3" -->
 
 ==============================================================================
 
@@ -542,24 +533,18 @@ jit_assert<"[]{ return std::is_same_v<std::tuple<int, double>,"s +
 ```
 <!-- .element: class="fragment" data-fragment-index="6" -->
 
-###### JITting allow us to manipulate `meta` using a `normal` C++
+###### JITting allows us to manipulate `meta` types using 'normal' C++
 <!-- .element: class="fragment" data-fragment-index="6" -->
 
 ----
 
 ### CPP Injection / Security breach
 
-##### [SQL Injection](https://www.w3schools.com/sql/sql_injection.asp)
+<img src="images/sql_injection.png" style="width: 40%; background:none; border:none; box-shadow:none;" />
 <!-- .element: class="fragment" -->
 
 ```sql
-SELECT * FROM Users WHERE Name ="John Doe" AND Pass ="myPass"
-```
-<!-- .element: class="fragment" -->
-
-```sql
--- ""="" is always TRUE
-SELECT * FROM Users WHERE Name ="" or ""="" AND Pass ="" or ""=""
+SELECT * FROM Users WHERE Name='' or 1==1--' and Password=''
 ```
 <!-- .element: class="fragment" -->
 
