@@ -1329,7 +1329,7 @@ auto future(); // No attribute at the definition side</code> // <font color="dar
 
 <pre><code>template <​class T>
 constexpr auto future();</code> // <font color="darkgray">Run/Compile-time</font><br/> -> <font color="white">auto jit = "int"s;
-    [[jit]] future<​jit>()</font><br/> -> <font color="white">future<"int">()</font></pre>
+    [[jit]] future<​jit>()</font><br/>    <font color="white">[[jit]] future<"int">()</font></pre>
 <!-- .element: class="fragment" data-fragment-index="4" -->
 
 <pre><code>template <​class T>
@@ -1357,10 +1357,13 @@ using type = reify(meta<std::integral_constant>(i)); // AST node
 ```
 <!-- .element: class="fragment" data-fragment-index="2" -->
 
+<pre><code>future<​type>() // No attribute required</code> // <font color="darkgray">future<​std::integral_constant<42>>()</font></pre>
+<!-- .element: class="fragment" data-fragment-index="3" -->
+
 ---
 
-<pre><code>future<​type>() // No attribute reuqired</code> // <font color="darkgray">future<​std::integral_constant<42>>()</font></pre>
-<!-- .element: class="fragment" data-fragment-index="3" -->
+##### [P1717: Compile­time Metaprogramming in C++](https://wg21.link/p1717)
+<!-- .element: class="fragment" data-fragment-index="2" -->
 
 ==============================================================================
 
