@@ -319,9 +319,6 @@ auto jit() -> void {
 <pre><code>jit<​"int">() // Type/String</code> -> <font color="lime">i</font></pre>
 <!-- .element: class="fragment" data-fragment-index="5" -->
 
-<pre><code>auto type = "int"s; jit<​type>()</code> -> <font color="lime">i</font></pre>
-<!-- .element: class="fragment" data-fragment-index="7" -->
-
 ----
 
 ### Hello World - [P1609r1](https://wg21.link/p1609)
@@ -533,7 +530,7 @@ jit_assert<"[]{ return std::is_same_v<std::tuple<int, double>,"s +
 ```
 <!-- .element: class="fragment" data-fragment-index="6" -->
 
-###### JITting allows to manipulate `meta` types using 'normal' C++
+##### JITting allows to manipulate `meta` types using 'normal' C++
 <!-- .element: class="fragment" data-fragment-index="6" -->
 
 ----
