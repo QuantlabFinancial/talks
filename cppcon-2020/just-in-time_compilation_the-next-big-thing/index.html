@@ -379,7 +379,7 @@ $CXX -fjit hello_world.cpp -o hello_world
 ```cpp
 template <class T>
 [[clang::jit]] auto jit() -> void {
-  T{}(); // Invokes lambda expression
+  T{}(); // Invokes the lambda expression
 }
 ```
 <!-- .element: class="fragment" data-fragment-index="1" -->
@@ -418,7 +418,7 @@ template <auto Expr>
 <!-- .element: class="fragment" data-fragment-index="2" -->
 
 ```cpp
-    Expr(); // Throws `compilation_error`
+    Expr(); // It throws a `compilation_error`
 ```
 <!-- .element: class="fragment" data-fragment-index="3" -->
 
@@ -480,49 +480,38 @@ template <auto Expr>
 
 ----
 
-### Utilities / Meta / Assert
+### Utilities / Assert
+
+```cpp
+template <auto TExpr>
+[[clang::jit]] auto jit_assert() -> void {
+  static_assert(TExpr()); // Notice it's a static_assert
+}
+```
+<!-- .element: class="fragment" data-fragment-index="5" -->
+
+---
+
+<pre><code>jit_assert<"[]{ return 42 == 42; }">()</code> -> <font color="lime">👍</font></pre>
+<!-- .element: class="fragment" data-fragment-index="6" -->
+
+<pre><code>jit_assert<"[]{ return 43 == 42; }">()</code> -> <font color="salmon">error: static assertion failed</font></pre>
+<!-- .element: class="fragment" data-fragment-index="7" -->
+
+----
+
+### Read–eval–print loop (REPL)
 
 ```cpp
 using meta = std::string; // [Future] Abstract Syntax Tree (AST) node
+                          // It enables `normal` Metaprogramming
 ```
 <!-- .element: class="fragment" data-fragment-index="1" -->
 
 ##### [P1717: Compile­time Metaprogramming in C++](https://wg21.link/p1717)
 <!-- .element: class="fragment" data-fragment-index="2" -->
 
-```cpp
-template <auto N> auto make_meta(auto n) -> meta {
-```
-<!-- .element: class="fragment" data-fragment-index="3" -->
-
-```cpp
-  return "std::integral_constant<int," + std::to_string(N + n) + '>';
-```
-<!-- .element: class="fragment" data-fragment-index="4" -->
-
-```cpp
-}
-```
-<!-- .element: class="fragment" data-fragment-index="3" -->
-
 ---
-
-```cpp
-template <auto TExpr> [[clang::jit]] auto jit_assert() -> void {
-  static_assert(TExpr());
-}
-```
-<!-- .element: class="fragment" data-fragment-index="5" -->
-
-<pre><code>jit_assert<"[]{ return 42 == " + make_meta<40>(2) + "{}; }">()</code> -> <font color="lime">👍</font></pre>
-<!-- .element: class="fragment" data-fragment-index="6" -->
-
-<pre><code>jit_assert<"[]{ return 43 == " + make_meta<40>(2) + "{}; }">()</code> -> <font color="salmon">error: static assertion failed</font></pre>
-<!-- .element: class="fragment" data-fragment-index="7" -->
-
-----
-
-### Read–eval–print loop (REPL)
 
 ```cpp
 std::vector<meta> v{};
@@ -588,7 +577,6 @@ int main() {
 <a href="https://www.youtube.com/watch?v=6dv9vdGIaWs"><img src="images/jit.png" style="width: 75%; background:none; border:none; box-shadow:none;" /></a>
 
 #### https://github.com/hfinkel/llvm-project-cxxjit
-<!-- .element: class="fragment" -->
 
 ==============================================================================
 
@@ -693,6 +681,47 @@ Here is the JIT function template. We pass in the result of `sort` i.e. the
 comma-separated string of sorted values.
 
 Note that `sort` doesn't have to be `constexpr`!
+
+----
+
+### Use case
+
+```cpp
+int main() {
+```
+<!-- .element: class="fragment" data-fragment-index="1" -->
+
+```cpp
+  while (there is an input...) {       // REPL - user / External data
+```
+<!-- .element: class="fragment" data-fragment-index="2" -->
+
+```cpp
+    process input data...
+    store/collect input data           // For future processing
+```
+<!-- .element: class="fragment" data-fragment-index="3" -->
+
+```cpp
+    if (store/collected data provides a benefit) {
+      jit<"based on collected data">() // [Optional] save an
+                                       // optimized library/binary
+    }
+```
+<!-- .element: class="fragment" data-fragment-index="4" -->
+
+```cpp
+  }
+```
+<!-- .element: class="fragment" data-fragment-index="2" -->
+
+```cpp
+}
+```
+<!-- .element: class="fragment" data-fragment-index="1" -->
+
+##### Promote Run-Time data to Compile-Time data
+<!-- .element: class="fragment" data-fragment-index="4" -->
 
 ----
 
@@ -865,7 +894,7 @@ template <auto Dispatch>
 
 ```cpp
 template <auto Dispatch>
-[[clang::jit(R"(CXXFLAGS="-O3 -DNDEBUG", out="dispatch.ir")")]
+[[clang::jit(R"(CXXFLAGS="-O3 -DNDEBUG", out="dispatch.ir*")")]
 ```
 <!-- .element: class="fragment" data-fragment-index="1" -->
 
@@ -885,13 +914,16 @@ auto dispatch(int id) -> void {
 <!-- .element: class="fragment" data-fragment-index="4" -->
 
 ##### * Intermediate representation (IR)
-<!-- .element: class="fragment" data-fragment-index="3" -->
+<!-- .element: class="fragment" data-fragment-index="1" -->
 
 ----
 
 ### Save library/binary
 
-<pre><code>auto dispatch(int) -> void;</code> // No templates in the mangled symbol</font></pre>
+###### main.cpp
+<!-- .element: class="fragment" data-fragment-index="0" -->
+
+<pre><code>auto dispatch(int) -> void; // _Z3dispatchi</code> // No templates in the mangled symbol</font></pre>
 <!-- .element: class="fragment" data-fragment-index="1" -->
 
 ```cpp
@@ -1259,7 +1291,7 @@ Notes:
 #### (+) Compile-time performance (Memoization)
 <!-- .element: align="left" class="fragment" data-fragment-index="2" -->
 
-#### (+) Direct access to the host / C++ Attribute
+#### (+) Direct access to the host / String manipulation using `normal` C++
 <!-- .element: align="left" class="fragment" data-fragment-index="3" -->
 
 ---
