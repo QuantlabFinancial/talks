@@ -211,7 +211,7 @@ like adopting version control.
 
 ----
 
-### Existing solutions
+### Existing solutions - C++
 
 * #### [Cling](https://github.com/root-project/cling)
 <!-- .element: class="fragment" data-fragment-index="0" -->
@@ -307,9 +307,9 @@ template <class T>
 <!-- .element: class="fragment" data-fragment-index="4" -->
 
 ```cpp
-// Instantiation at Run-Time Point-Of-Instantiation (POI)
+// Instantiation at Run-time Point-Of-Instantiation (POI)
 // Ignored if not used
-// CXXFLAGS comes from the host compilation (Might be overwritten)
+// CXXFLAGS comes from the host compilation (might be overwritten)
 ```
 <!-- .element: class="fragment" data-fragment-index="5" -->
 
@@ -504,7 +504,6 @@ template <auto TExpr>
 
 ```cpp
 using meta = std::string; // [Future] Abstract Syntax Tree (AST) node
-                          // It enables `normal` Metaprogramming
 ```
 <!-- .element: class="fragment" data-fragment-index="1" -->
 
@@ -516,30 +515,39 @@ using meta = std::string; // [Future] Abstract Syntax Tree (AST) node
 ```cpp
 std::vector<meta> v{};
 ```
-<!-- .element: class="fragment" -->
+<!-- .element: class="fragment" data-fragment-index="3" -->
 
 ```cpp
 v.push_back("int");
-```
-<!-- .element: class="fragment" -->
-
-```cpp
 v.push_back("double");
 ```
-<!-- .element: class="fragment" -->
+<!-- .element: class="fragment" data-fragment-index="4" -->
 
 ---
+
+```cpp
+[[nodiscard]] auto join(std::input_iterator auto first,
+                        std::input_iterator auto last,
+                        auto f, auto seperator);
+```
+<!-- .element: class="fragment" data-fragment-index="5" -->
 
 ```cpp
 jit_assert<"[]{ return std::is_same_v<std::tuple<int, double>,"s +
   "std::tuple<" + join(v, [](const auto& e) { return e; }), ',') +
 ">>; }">()
 ```
-<!-- .element: class="fragment" -->
+<!-- .element: class="fragment" data-fragment-index="6" -->
+
+##### * Manipulates `meta` using `normal` C++
+<!-- .element: class="fragment" data-fragment-index="6" -->
 
 ----
 
 ### CPP Injection / Security breach
+
+##### [SQL Injection](https://www.w3schools.com/sql/sql_injection.asp)
+<!-- .element: class="fragment" -->
 
 ```sql
 SELECT * FROM Users WHERE Name ="John Doe" AND Pass ="myPass"
@@ -552,10 +560,10 @@ SELECT * FROM Users WHERE Name ="" or ""="" AND Pass ="" or ""=""
 ```
 <!-- .element: class="fragment" -->
 
-##### https://www.w3schools.com/sql/sql_injection.asp
-<!-- .element: class="fragment" -->
-
 ---
+
+##### CPP Injection
+<!-- .element: class="fragment" -->
 
 ```cpp
 int main() {
@@ -684,7 +692,7 @@ Note that `sort` doesn't have to be `constexpr`!
 
 ----
 
-### Use case
+### JIT - Use case
 
 ```cpp
 int main() {
@@ -692,20 +700,21 @@ int main() {
 <!-- .element: class="fragment" data-fragment-index="1" -->
 
 ```cpp
-  while (there is an input...) {       // REPL - user / External data
+  while (there is an input...) { // REPL - user
+                                 // External data - file/tcp/udp/...
 ```
 <!-- .element: class="fragment" data-fragment-index="2" -->
 
 ```cpp
     process input data...
-    store/collect input data           // For future processing
+    store/collect input data     // For the future processing...
 ```
 <!-- .element: class="fragment" data-fragment-index="3" -->
 
 ```cpp
     if (store/collected data provides a benefit) {
-      jit<"based on collected data">() // [Optional] save an
-                                       // optimized library/binary
+      jit<"based on collected data">()
+      [Optional] Save an optimized library/binary
     }
 ```
 <!-- .element: class="fragment" data-fragment-index="4" -->
@@ -720,7 +729,7 @@ int main() {
 ```
 <!-- .element: class="fragment" data-fragment-index="1" -->
 
-##### Promote Run-Time data to Compile-Time data
+* ###### Promotes Run-time data to Compile-time data / Optimized library/binary can be saved for free (already compiled)
 <!-- .element: class="fragment" data-fragment-index="4" -->
 
 ----
@@ -745,7 +754,7 @@ struct e3 {};
 ---
 
 ```cpp
-// Mappings
+// Mappings - Can be extended at Run-time
 std::unordered_map mappings = {
   std::pair{ "e1", "foo" },
   std::pair{ "e2", "bar" }
@@ -825,7 +834,7 @@ template <class TDispatcher, class TEvent>
     cannot be used prior to '::' because it has no members</font></pre>
 <!-- .element: class="fragment" -->
 
-<pre><code>dispatch<​make_dispatcher(mappings)>(e4{})</code> // <font color="darkgray">Run-time compilation error</font><br/> -> <font color="salmon">error: use of undeclared identifier 'e4'</font></pre>
+<pre><code>dispatch<​make_dispatcher(mappings)>(e4{})</code> // <font color="darkgray">Compilation error</font><br/> -> <font color="salmon">error: use of undeclared identifier 'e4'</font></pre>
 <!-- .element: class="fragment" -->
 
 ----
@@ -833,7 +842,7 @@ template <class TDispatcher, class TEvent>
 ### Run-time dispatch
 
 ```cpp
-// Events with ids
+// Events with run-time ids
 struct e1 { static constexpr auto id = 1; };
 struct e2 { static constexpr auto id = 2; };
 struct e3 { static constexpr auto id = 3; };
@@ -899,7 +908,7 @@ template <auto Dispatch>
 <!-- .element: class="fragment" data-fragment-index="1" -->
 
 ```cpp
-auto dispatch(int id) -> void {
+auto dispatch(int id) -> void { // -> _Z3dispatchi
   Dispatch(id);
 }
 ```
@@ -923,7 +932,10 @@ auto dispatch(int id) -> void {
 ###### main.cpp
 <!-- .element: class="fragment" data-fragment-index="0" -->
 
-<pre><code>auto dispatch(int) -> void; // _Z3dispatchi</code> // No templates in the mangled symbol</font></pre>
+```cpp
+#include <string>   // std::stoi
+void dispatch(int); // _Z3dispatchi - Mangled symbol with no templates
+```
 <!-- .element: class="fragment" data-fragment-index="1" -->
 
 ```cpp
@@ -1283,7 +1295,7 @@ Notes:
 
 ----
 
-### JIT - Costs & Benefits
+### [\[\[clang::jit\]\]](https://github.com/hfinkel/llvm-project-cxxjit) - Costs & Benefits
 
 #### (+) Run-time performance (Optimizations based on run-time data/available hardware)
 <!-- .element: align="left" class="fragment" data-fragment-index="1" -->
@@ -1291,7 +1303,7 @@ Notes:
 #### (+) Compile-time performance (Memoization)
 <!-- .element: align="left" class="fragment" data-fragment-index="2" -->
 
-#### (+) Direct access to the host / String manipulation using `normal` C++
+#### (+) Direct access to the host / STL algorithms for MetaProgramming
 <!-- .element: align="left" class="fragment" data-fragment-index="3" -->
 
 ---
@@ -1304,18 +1316,20 @@ Notes:
 
 ----
 
-### Future? / Compile-Time & Run-Time
+### Future? / Compile-time & Run-time
 
 <pre><code>template <​class T>
-[[clang::jit]] auto future();</code> // <font color="darkgray">Run-time</font><br/> -> <font color="white">auto jit = "int"s; future<​jit>()</font></pre>
+auto future(); // No attribute at the definition side</code> // <font color="darkgray">Run-time</font><br/> -> <font color="white">auto jit = "int"s;
+    [[jit]] future<​jit>()</font> // Attribute at the calling side</pre>
 <!-- .element: class="fragment" data-fragment-index="3" -->
 
 <pre><code>template <​class T>
-[[clang::jit]] constexpr auto future();</code> // <font color="darkgray">Run/Compile-time</font><br/> -> <font color="white">auto jit = "int"s; future<​jit>();</font><br/> -> <font color="white">future<"int">()</font></pre>
+constexpr auto future();</code> // <font color="darkgray">Run/Compile-time</font><br/> -> <font color="white">auto jit = "int"s;
+    [[jit]] future<​jit>()</font><br/> -> <font color="white">future<"int">()</font></pre>
 <!-- .element: class="fragment" data-fragment-index="4" -->
 
 <pre><code>template <​class T>
-[[clang::jit]] consteval auto future();</code> // <font color="darkgray">Compile-time</font><br/> -> <font color="white">future<"int">()</font></pre>
+consteval auto future();</code> // <font color="darkgray">Compile-time</font><br/> -> <font color="white">[[jit]] future<"int">()</font></pre>
 <!-- .element: class="fragment" data-fragment-index="5" -->
 
 ---
@@ -1330,7 +1344,7 @@ Notes:
 ### Future? / Meta - Stringless Solution
 
 ```cpp
-auto i = 42; // Run-Time value
+auto i = 42; // Run-time value
 ```
 <!-- .element: class="fragment" data-fragment-index="1" -->
 
@@ -1341,7 +1355,7 @@ using type = reify(meta<std::integral_constant>(i)); // AST node
 
 ---
 
-<pre><code>future<​type>()</code> // <font color="darkgray">future<​std::integral_constant<42>>()</font></pre>
+<pre><code>future<​type>() // No attribute reuqired</code> // <font color="darkgray">future<​std::integral_constant<42>>()</font></pre>
 <!-- .element: class="fragment" data-fragment-index="3" -->
 
 ==============================================================================
@@ -1417,7 +1431,7 @@ Easier compiler development/extension? (Moddable compiler)
         controls: false,
 
         // Display a presentation progress bar
-        progress: true,
+        progress: false,
 
         // Display the page number of the current slide
         slideNumber: 'c/t',
