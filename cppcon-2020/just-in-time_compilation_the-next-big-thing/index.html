@@ -706,16 +706,17 @@ int main() {
 <!-- .element: class="fragment" data-fragment-index="2" -->
 
 ```cpp
-    process input data...
-    store/collect input data     // For the future processing...
+   process input data...
+   collect input data... // For the future processing...
 ```
 <!-- .element: class="fragment" data-fragment-index="3" -->
 
 ```cpp
-    if (store/collected data provides a benefit) {
-      jit<"based on collected data">()
-      [Optional] Save an optimized library/binary
-    }
+   if (an explicit trigger or
+       collected data provides benefits) { // Artificial Intelligence?
+     jit<"based on collected data">()
+     [Optional] Save an optimized library/binary
+   }
 ```
 <!-- .element: class="fragment" data-fragment-index="4" -->
 
@@ -729,7 +730,7 @@ int main() {
 ```
 <!-- .element: class="fragment" data-fragment-index="1" -->
 
-* ###### Promotes Run-time data to Compile-time data / Optimized library/binary can be saved for free (already compiled)
+###### Promotes Run-time data to Compile-time data / Optimized library/binary can be saved for free (already compiled)
 <!-- .element: class="fragment" data-fragment-index="4" -->
 
 ----
@@ -804,7 +805,7 @@ template <class TDispatcher, class TEvent>
 ```
 <!-- .element: class="fragment" data-fragment-index="3" -->
 
-###### * [mp_map_find](https://www.boost.org/doc/libs/1_66_0/libs/mp11/doc/html/mp11.html#mp_map_find_m_k) - returns a handler for a given event or void otherwise
+###### [mp_map_find](https://www.boost.org/doc/libs/1_66_0/libs/mp11/doc/html/mp11.html#mp_map_find_m_k) - returns a handler for a given event or void otherwise
 <!-- .element: class="fragment" data-fragment-index="4" -->
 
 ----
