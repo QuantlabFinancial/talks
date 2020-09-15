@@ -964,13 +964,13 @@ $CXX $CXXFLAGS dispatch.o main.cpp -o dispatch # No `-fjit` required
 <pre><code>./dispatch 1</code> -> <font color="lime">foo</font></pre>
 <!-- .element: class="fragment" -->
 
-<img src="images/asm_binary.png" style="width: 33%; background:none; border:none; box-shadow:none;" />
-<!-- .element: class="fragment" -->
-
 <pre><code>./dispatch 2</code> -> <font color="lime">bar</font></pre>
 <!-- .element: class="fragment" -->
 
 <pre><code>./dispatch 0</code> -> <font color="darkgray"># If NDEBUG is defined then assert does nothing</font> // Default case</pre>
+<!-- .element: class="fragment" -->
+
+<img src="images/asm_binary.png" style="width: 35%; background:none; border:none; box-shadow:none;" />
 <!-- .element: class="fragment" -->
 
 ----
@@ -1346,6 +1346,11 @@ using type = reify(meta<std::integral_constant>(i)); // AST node
 
 <pre><code>future<​type>() // No attribute required</code> // <font color="darkgray">future<​std::integral_constant<42>>()</font></pre>
 <!-- .element: class="fragment" data-fragment-index="3" -->
+
+---
+
+##### To "reify" something is to take something that is abstract and regard it as material
+<!-- .element: class="fragment" data-fragment-index="2" -->
 
 ---
 
