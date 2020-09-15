@@ -297,10 +297,10 @@ template <class T>
 // Ignored if not used
 // CXXFLAGS comes from the host compilation (might be overwritten)
 ```
-<!-- .element: class="fragment" data-fragment-index="5" -->
+<!-- .element: class="fragment" data-fragment-index="6" -->
 
 ```cpp
-[[clang::jit]]
+[[clang::jit]] // It requires `-fjit` compilation flag
 ```
 <!-- .element: class="fragment" data-fragment-index="4" -->
 
@@ -317,7 +317,7 @@ auto jit() -> void {
 <!-- .element: class="fragment" data-fragment-index="3" -->
 
 <pre><code>jit<​"int">() // Type/String</code> -> <font color="lime">i</font></pre>
-<!-- .element: class="fragment" data-fragment-index="6" -->
+<!-- .element: class="fragment" data-fragment-index="5" -->
 
 <pre><code>auto type = "int"s; jit<​type>()</code> -> <font color="lime">i</font></pre>
 <!-- .element: class="fragment" data-fragment-index="7" -->
@@ -339,7 +339,7 @@ int main(int argc, const char** argv) {
 ---
 
 ```cpp
-$CXX -fjit hello_world.cpp -o hello_world
+$CXX $CXXFLAGS -fjit hello_world.cpp -o hello_world
 ```
 <!-- .element: class="fragment" data-fragment-index="2" -->
 
@@ -412,7 +412,7 @@ template <auto Expr>
 <!-- .element: class="fragment" data-fragment-index="2" -->
 
 ```cpp
-    Expr(); // It throws a `compilation_error`
+    Expr(); // It potentially throws a `compilation_error`
 ```
 <!-- .element: class="fragment" data-fragment-index="3" -->
 
@@ -430,7 +430,7 @@ template <auto Expr>
 
 ---
 
-<pre><code>jit<"foo">()</code> -> <font color="salmon">error: 'foo' was not declared in this scope</font></pre>
+<pre><code>jit<"foo">() // Assuming that the host doesn't define 'foo'</code> -> <font color="salmon">error: 'foo' was not declared in this scope</font></pre>
 <!-- .element: class="fragment" data-fragment-index="4" -->
 
 ----
