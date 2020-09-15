@@ -453,7 +453,7 @@ template <auto Expr>
 ```cpp
 template <auto Expr>
 [[clang::jit]] auto jit_compiles() ->
-  std::expected<compilation_error> {
+  std::expected<bool, compilation_error> {
 ```
 <!-- .element: class="fragment" data-fragment-index="1" -->
 
@@ -464,7 +464,7 @@ template <auto Expr>
     return error;
   }
 
-  return {};
+  return true;
 ```
 <!-- .element: class="fragment" data-fragment-index="2" -->
 
