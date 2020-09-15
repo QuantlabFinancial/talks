@@ -520,9 +520,9 @@ v.push_back("double");
 ---
 
 ```cpp
-[[nodiscard]] auto join(std::input_iterator auto first,
-                        std::input_iterator auto last,
-                        auto f, auto separator);
+template<std::input_iterator InputIterator>
+[[nodiscard]] auto join(InputIterator first, InputIterator last,
+                        auto&& f, const auto separator);
 ```
 <!-- .element: class="fragment" data-fragment-index="5" -->
 
@@ -533,7 +533,7 @@ jit_assert<"[]{ return std::is_same_v<std::tuple<int, double>,"s +
 ```
 <!-- .element: class="fragment" data-fragment-index="6" -->
 
-###### JITting allows us to manipulate `meta` types using 'normal' C++
+###### JITting allows to manipulate `meta` types using 'normal' C++
 <!-- .element: class="fragment" data-fragment-index="6" -->
 
 ----
@@ -718,7 +718,7 @@ int main() {
 ```
 <!-- .element: class="fragment" data-fragment-index="1" -->
 
-###### Promotes Run-time data to Compile-time data / Optimized library/binary can be saved for free (already compiled)
+###### It promotes Run-time data to Compile-time data / Optimized library/binary can be saved for free (already compiled)
 <!-- .element: class="fragment" data-fragment-index="4" -->
 
 ----
