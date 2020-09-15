@@ -961,7 +961,7 @@ $CXX dispatch.o main.cpp -o dispatch # No `-fjit` required
 <pre><code>ls -lh dispatch</code> -> <font color="white">1.1M # Compiler is not included</font></pre>
 <!-- .element: class="fragment" data-fragment-index="5" -->
 
-<pre><code>nm dispatch | grep dispatch</code> -> <font color="white">_Z3dispatchi</font></pre>
+<pre><code>nm dispatch | grep dispatch # List symbols from object files</code> -> <font color="white">_Z3dispatchi</font></pre>
 <!-- .element: class="fragment" data-fragment-index="6" -->
 
 ##### LLC - [LLVM static compiler](https://llvm.org/docs/CommandGuide/llc.html)
