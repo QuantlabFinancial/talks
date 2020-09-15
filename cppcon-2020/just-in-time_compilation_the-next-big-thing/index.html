@@ -302,16 +302,16 @@ template <class T>
 <!-- .element: class="fragment" data-fragment-index="1" -->
 
 ```cpp
-[[clang::jit]]
-```
-<!-- .element: class="fragment" data-fragment-index="4" -->
-
-```cpp
 // Instantiation at Run-time Point-Of-Instantiation (POI)
 // Ignored if not used
 // CXXFLAGS comes from the host compilation (might be overwritten)
 ```
 <!-- .element: class="fragment" data-fragment-index="5" -->
+
+```cpp
+[[clang::jit]]
+```
+<!-- .element: class="fragment" data-fragment-index="4" -->
 
 ```cpp
 auto jit() -> void {
@@ -325,7 +325,7 @@ auto jit() -> void {
 <pre><code>jit<​int>()   // Type</code> -> <font color="lime">i</font></pre>
 <!-- .element: class="fragment" data-fragment-index="3" -->
 
-<pre><code>jit<​"int">() // TypeString</code> -> <font color="lime">i</font></pre>
+<pre><code>jit<​"int">() // Type/String</code> -> <font color="lime">i</font></pre>
 <!-- .element: class="fragment" data-fragment-index="6" -->
 
 <pre><code>auto type = "int"s; jit<​type>()</code> -> <font color="lime">i</font></pre>
@@ -334,6 +334,9 @@ auto jit() -> void {
 ----
 
 ### Hello World - [P1609r1](https://wg21.link/p1609)
+
+###### hello_world.cpp
+<!-- .element: class="fragment" data-fragment-index="0" -->
 
 ```cpp
 int main(int argc, const char** argv) {
@@ -539,7 +542,7 @@ jit_assert<"[]{ return std::is_same_v<std::tuple<int, double>,"s +
 ```
 <!-- .element: class="fragment" data-fragment-index="6" -->
 
-##### * Manipulates `meta` using `normal` C++
+###### JITting allow us to manipulate `meta` using a `normal` C++
 <!-- .element: class="fragment" data-fragment-index="6" -->
 
 ----
