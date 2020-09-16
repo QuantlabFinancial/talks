@@ -397,36 +397,26 @@ template <auto Expr> // Non-Type Template Parameter (NTTP)
 ### Handling errors
 
 ```cpp
-template <auto Expr>
-[[clang::jit]] auto jit() -> void {
+  try {
 ```
 <!-- .element: class="fragment" data-fragment-index="1" -->
 
 ```cpp
-  try {
+    jit<"unknown_type">();
 ```
 <!-- .element: class="fragment" data-fragment-index="2" -->
-
-```cpp
-    Expr(); // It potentially throws a `compilation_error`
-```
-<!-- .element: class="fragment" data-fragment-index="3" -->
 
 ```cpp
   } catch(const compilation_error& error) {
     std::cerr << error.what() << '\n';
   }
 ```
-<!-- .element: class="fragment" data-fragment-index="2" -->
-
-```cpp
-}
-```
 <!-- .element: class="fragment" data-fragment-index="1" -->
+
 
 ---
 
-<pre><code>jit<"[]{ return unknown_type{}; }">()</code> -> <font color="salmon">error: 'unknown_type' was not declared in this scope</font></pre>
+<pre>-> <font color="salmon">error: 'unknown_type' was not declared in this scope</font></pre>
 <!-- .element: class="fragment" data-fragment-index="4" -->
 
 ----
@@ -438,15 +428,14 @@ template <auto Expr>
 ### Utilities / compiles
 
 ```cpp
-template <auto Expr>
-[[clang::jit]] auto jit_compiles() ->
+auto jit_compiles(auto expr) ->
   std::expected<bool, compilation_error> {
 ```
 <!-- .element: class="fragment" data-fragment-index="1" -->
 
 ```cpp
   try {
-    jit<Expr>();
+    jit<expr>();
   } catch(const compilation_error& error) {
     return error;
   }
@@ -462,10 +451,10 @@ template <auto Expr>
 
 ---
 
-<pre><code>assert(jit_compiles<"[]{}">())</code> -> <font color="lime">👍</font></pre>
+<pre><code>assert(jit_compiles("[]{}"))</code> -> <font color="lime">👍</font></pre>
 <!-- .element: class="fragment" data-fragment-index="3" -->
 
-<pre><code>assert(jit_compiles<"[]{ int = 42 }">())</code> -> <font color="salmon">Assertion `compiles<"[]{ int = 42 }">()' failed</font></pre>
+<pre><code>assert(jit_compiles("[}"))</code> -> <font color="salmon">Assertion `jit_compiles("[}")' failed</font></pre>
 <!-- .element: class="fragment" data-fragment-index="4" -->
 
 ----
