@@ -426,7 +426,7 @@ template <auto Expr>
 
 ---
 
-<pre><code>jit<"foo">() // Assuming that the host doesn't define 'foo'</code> -> <font color="salmon">error: 'foo' was not declared in this scope</font></pre>
+<pre><code>jit<"[]{ return unknown_type{}; }">()</code> -> <font color="salmon">error: 'unknown_type' was not declared in this scope</font></pre>
 <!-- .element: class="fragment" data-fragment-index="4" -->
 
 ----
@@ -465,7 +465,7 @@ template <auto Expr>
 <pre><code>assert(jit_compiles<"[]{}">())</code> -> <font color="lime">👍</font></pre>
 <!-- .element: class="fragment" data-fragment-index="3" -->
 
-<pre><code>assert(jit_compiles<"[}">())</code> -> <font color="salmon">Assertion `compiles<"[}">()' failed</font></pre>
+<pre><code>assert(jit_compiles<"[]{ int = 42 }">())</code> -> <font color="salmon">Assertion `compiles<"[]{ int = 42 }">()' failed</font></pre>
 <!-- .element: class="fragment" data-fragment-index="4" -->
 
 ----
